@@ -1,22 +1,23 @@
 
-## Pulse Secure VPN Idle Config Parser
+## Pulse Secure VPN Idle Config Checker
 
-Python Script to parse Idle configurations from Pulse Secure VPN server's XML export file.
+Python Script to check Idle configurations in Pulse Secure VPN servers using the XML export/backup file.
 
 
 ## Features
 
 - Console output support with categorization.
-- Saves the results to CSV file in current working directory.
-- Uses the default Python's [XML ElementTree API](https://docs.python.org/3/library/xml.etree.elementtree.html) for parsing _(no third-party library dependencies)_
+- Saves the result to CSV file in current working directory.
+- Uses the [XML ElementTree API](https://docs.python.org/3/library/xml.etree.elementtree.html) from python standard library for parsing _(no third-party library dependencies)_.
 
 ## Prerequisites
 
 - Python 3.x _(Standlone or Windows Store version)_
 - XML export file from Pulse Secure VPN.
 
-_Download XML export from VPN server admin GUI by navigating to Maintenance >> Import/Export >> Export XML >> Select All >> Export_
+_Download XML export from VPN server admin GUI by navigating to **Maintenance >> Import/Export >> Export XML >> Select All >> Export**_
 
+---
 
 ## Usage
 
