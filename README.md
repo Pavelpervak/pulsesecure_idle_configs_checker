@@ -10,6 +10,13 @@ Python Script to parse Idle configurations from Pulse Secure VPN server's XML ex
 - Saves the results to CSV file in current working directory.
 - Uses the default Python's [XML ElementTree API](https://docs.python.org/3/library/xml.etree.elementtree.html) for parsing _(no third-party library dependencies)_
 
+## Prerequisites
+
+- Python 3.x _(Standlone or Windows Store version)_
+- XML export file from Pulse Secure VPN.
+
+_Download XML export from VPN server admin GUI by navigating to Maintenance >> Import/Export >> Export XML >> Select All >> Export_
+
 
 ## Usage
 
