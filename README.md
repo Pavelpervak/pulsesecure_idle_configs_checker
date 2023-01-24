@@ -7,7 +7,7 @@ Python Script to check Idle configurations in Pulse Secure VPN servers using the
 ## Features
 
 - Console output support with categorization.
-- Saves the result to CSV file in current working directory.
+- Saves the result to a CSV file (timestamped csv files stored under "results" folder - created automatically under cwd).
 - Uses the [XML ElementTree API](https://docs.python.org/3/library/xml.etree.elementtree.html) from python standard library for parsing _(no third-party library dependencies)_.
 
 ## Prerequisites
