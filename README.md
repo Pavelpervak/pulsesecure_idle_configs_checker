@@ -3,6 +3,7 @@
 
 Python Script to check Idle configurations in Pulse Secure VPN servers using the XML export/backup file.
 
+---
 
 ## Features
 
@@ -14,10 +15,15 @@ Python Script to check Idle configurations in Pulse Secure VPN servers using the
 ## Prerequisites
 
 - Python 3.x _(Standlone or Windows Store version)_ | _Created & Tested using Python 3.9_
-- XML export file from Pulse Secure VPN.
+- XML export file from Pulse Secure VPN (exclude ESAP & Pulse Secure Client package)
 
 _Download XML export from VPN server admin GUI by navigating to **Maintenance >> Import/Export >> Export XML >> Select All >> Export**_
 
+```
+**Excluding ESAP & Pulse Secure Client Version during XML Export**
+ESAP - Collapse Endpoint Security tree > ESAP Version > select None.
+Client package - Collapse Pulse Secure Versions/Ivanti Secure Access Client tree > Pulse Secure Versions > None.
+```
 ---
 
 ## Usage
