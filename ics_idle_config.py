@@ -80,12 +80,12 @@ def console_output():
     print("****** TOTAL CONFIGS ******")
     print()
 
-    logger.info("Total Admin Realms %d\n", len(config.total_admin_realms))
-    logger.info("Total User Realms %d\n", len(config.total_user_realms))
+    logger.info("Total Admin Realms - %d\n", len(config.total_admin_realms))
+    logger.info("Total User Realms - %d\n", len(config.total_user_realms))
     logger.info(
-    "Total Authentication servers %d\n", len(config.total_auth_servers))
-    logger.info("Total Admin Roles %d\n", len(config.total_admin_roles))
-    logger.info("Total User Roles %d\n", len(config.total_user_roles))
+    "Total Authentication servers - %d\n", len(config.total_auth_servers))
+    logger.info("Total Admin Roles - %d\n", len(config.total_admin_roles))
+    logger.info("Total User Roles - %d\n", len(config.total_user_roles))
 
     print()
     print("****** MISC CONFIGS ******")
@@ -114,6 +114,14 @@ def console_output():
     pprint(config.idle_user_urls)
     print()
 
+    logger.info("Idle Admin sign-in realms - %d\n", len(config.idle_signin_admin_realm))
+    pprint(config.idle_signin_admin_realm)
+    print()
+
+    logger.info("Idle User sign-in realms - %d\n", len(config.idle_signin_user_realm))
+    pprint(config.idle_signin_user_realm)
+    print()
+
     logger.info("Idle Authentication servers - %d\n",
             len(config.idle_auth_servers))
     pprint(config.idle_auth_servers)
@@ -136,7 +144,9 @@ def csv_report():
         len(config.idle_admin_realms),
         len(config.idle_admin_roles),
         len(config.idle_user_urls),
-        len(config.idle_admin_urls)
+        len(config.idle_admin_urls),
+        len(config.idle_signin_user_realm),
+        len(config.idle_signin_admin_realm)
     )
 
     def fill_entries(data_list: list):
@@ -149,7 +159,6 @@ def csv_report():
             return data_list
         return data_list
 
-
     iauth_servers = fill_entries(list(config.idle_auth_servers))
     iuser_realms = fill_entries(list(config.idle_user_realms))
     iuser_roles = fill_entries(list(config.idle_user_roles))
@@ -157,6 +166,8 @@ def csv_report():
     iadmin_urls = fill_entries(list(config.idle_admin_urls))
     iadmin_realms = fill_entries(list(config.idle_admin_realms))
     iadmin_roles = fill_entries(list(config.idle_admin_roles))
+    iuser_signin = fill_entries(list(config.idle_signin_user_realm))
+    iadmin_signin = fill_entries(list(config.idle_signin_admin_realm))
 
     if 'results' not in os.listdir():
         os.mkdir('results')
@@ -168,7 +179,8 @@ def csv_report():
     ) as file_handle:
         headers = ["IDLE_AUTH_SERVERS", "IDLE_USER_REALMS",
                 "IDLE_USER_ROLES", "IDLE_ADMIN_REALMS", "IDLE_ADMIN_ROLES",
-                "IDLE_USER_URLS", "IDLE_ADMIN_URLS"]
+                "IDLE_USER_URLS", "IDLE_ADMIN_URLS", "IDLE_SIGNIN_USER_REALMS",
+                "IDLE_SIGNIN_ADMIN_REALMS"]
         write_output = DictWriter(file_handle, dialect='excel', fieldnames=headers)
         write_output.writeheader()
 
@@ -183,6 +195,8 @@ def csv_report():
                     headers[4]: iadmin_roles[item],
                     headers[5]: f"{iuser_urls[item]} - {config.user_signin_disabled.get(iuser_urls[item], ' ')}",
                     headers[6]: f"{iadmin_urls[item]} - {config.admin_signin_disabled.get(iadmin_urls[item], ' ')}",
+                    headers[7]: iuser_signin[item],
+                    headers[8]: iadmin_signin[item]
                 }
             )
 

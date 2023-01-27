@@ -113,40 +113,61 @@ class ICSIdleConfig(ICSXMLParser):
         setattr(self,"user_signin_enabled",user_signin_enabled_dict)
         setattr(self,"admin_signin_enabled",admin_signin_enabled_dict)
 
-        used_user_urls = self.used_signin_url(
+        used_user_urls = self.used_signin_realms(
             enabled_url=user_signin_enabled_dict,
             disabled_url=user_signin_disabled_dict
         )
         setattr(self, "used_urls_user", used_user_urls)
 
-        used_admin_urls = self.used_signin_url(
+        used_admin_urls = self.used_signin_realms(
             enabled_url=admin_signin_enabled_dict,
             disabled_url=admin_signin_disabled_dict
         )
         setattr(self, "used_urls_admin", used_admin_urls)
 
-    def used_signin_url(self, enabled_url: dict, disabled_url: dict) -> set:
-        """Used SignIn URLs"""
+    # def used_signin_url(self, enabled_url: dict, disabled_url: dict) -> set:
+    #     """Used SignIn URLs
+    #     Returns the signin URL which has idle user realm thats not mapped any other active signin URL
+    #     """
+    #     used_urls = set()
+    #     for disable_url,disable_realm in disabled_url.items():
+    #         disable_realm: set
+    #         for enable_realm in enabled_url.values():
+    #             enable_realm: set
+    #             if ((len(disable_realm) == len(enable_realm)) or (len(disable_realm) == 1)):
+    #                 if disable_realm.issubset(enable_realm): # Try matching set-to-set if one set.
+    #                     used_urls.add(disable_url)
+    #                     break
+    #             elif len(disable_realm) > len(enable_realm): # 
+    #                 for _set in disable_realm:
+    #                     if _set in enable_realm:
+    #                         used_urls.add(disable_url)
+    #                         break
+    #             elif len(disable_realm) < len(enable_realm):
+    #                 if len(disable_realm) > 1:
+    #                     for _set in disable_realm:
+    #                         if _set in enable_realm:
+    #                             used_urls.add(disable_url)
+    #                             break
+    #     return used_urls
+
+    def used_signin_realms(self, enabled_url: dict, disabled_url: dict) -> set:
+        """Used SignIn URLs
+        Returns the signin URL which has idle user realm thats not mapped any other active signin URL
+        """
+        enabled_set = set().union(*enabled_url.values()) # Optimized version of user_signin_url method.
         used_urls = set()
         for disable_url,disable_realm in disabled_url.items():
             disable_realm: set
-            for enable_url,enable_realm in enabled_url.items():
-                enable_realm: set
-                if ((len(disable_realm) == len(enable_realm)) or (len(disable_realm) == 1)):
-                    if disable_realm.issubset(enable_realm):
+            if len(disable_realm) == 1:
+                if disable_realm.issubset(enabled_set):
+                    used_urls.add(disable_url)
+                    continue
+            else:
+                for _realm in disable_realm:
+                    if _realm in enabled_set:
                         used_urls.add(disable_url)
-                        break
-                elif len(disable_realm) > len(enable_realm):
-                    for _set in disable_realm:
-                        if _set in enable_realm:
-                            used_urls.add(disable_url)
-                            break
-                elif len(disable_realm) < len(enable_realm):
-                    if len(disable_realm) > 1:
-                        for _set in disable_realm:
-                            if _set in enable_realm:
-                                used_urls.add(disable_url)
-                                break
+                        continue
         return used_urls
 
     @property
@@ -158,6 +179,20 @@ class ICSIdleConfig(ICSXMLParser):
     def idle_admin_urls(self) -> set:
         """Unused disabled signin URL - Admin"""
         return set(list(self.admin_signin_disabled)).difference(self.used_urls_admin)
+
+    @property
+    def idle_signin_user_realm(self) -> set:
+        """Ununsed user realm mapped to disabled signin URL"""
+        return set().union(*self.user_signin_disabled.values()).difference(
+            set().union(*self.user_signin_enabled.values())
+        )
+
+    @property
+    def idle_signin_admin_realm(self) -> set:
+        """Ununsed admin realm mapped to disabled signin URL"""
+        return set().union(*self.admin_signin_disabled.values()).difference(
+            set().union(*self.admin_signin_enabled.values())
+        )
 
     def user_realms(self) -> None:
         """Parse elements present under user realms section"""
