@@ -20,7 +20,7 @@ Python Script to check Idle configurations in Pulse Secure VPN servers using the
 _Download XML export from VPN server admin GUI by navigating to **Maintenance >> Import/Export >> Export XML >> Select All >> Export**_
 
 ```
-**Excluding ESAP & Pulse Secure Client Version during XML Export**
+**Excluding ESAP & Pulse Secure Client Version during XML Export will reduce size of the backup file - Recommended**
 ESAP - Collapse Endpoint Security tree > ESAP Version > select None.
 Client package - Collapse Pulse Secure Versions/Ivanti Secure Access Client tree > Pulse Secure Versions > None.
 ```
