@@ -30,7 +30,6 @@ class ICSIdleConfig(ICSXMLParser):
         self.admin_realms()
         self.user_realms()
         self.signin_urls()
-        self.signin_status()
         self.user_roles()
         self.admin_roles()
         self.misc_aoa_roles()
@@ -125,37 +124,12 @@ class ICSIdleConfig(ICSXMLParser):
         )
         setattr(self, "used_urls_admin", used_admin_urls)
 
-    # def used_signin_url(self, enabled_url: dict, disabled_url: dict) -> set:
-    #     """Used SignIn URLs
-    #     Returns the signin URL which has idle user realm thats not mapped any other active signin URL
-    #     """
-    #     used_urls = set()
-    #     for disable_url,disable_realm in disabled_url.items():
-    #         disable_realm: set
-    #         for enable_realm in enabled_url.values():
-    #             enable_realm: set
-    #             if ((len(disable_realm) == len(enable_realm)) or (len(disable_realm) == 1)):
-    #                 if disable_realm.issubset(enable_realm): # Try matching set-to-set if one set.
-    #                     used_urls.add(disable_url)
-    #                     break
-    #             elif len(disable_realm) > len(enable_realm): # 
-    #                 for _set in disable_realm:
-    #                     if _set in enable_realm:
-    #                         used_urls.add(disable_url)
-    #                         break
-    #             elif len(disable_realm) < len(enable_realm):
-    #                 if len(disable_realm) > 1:
-    #                     for _set in disable_realm:
-    #                         if _set in enable_realm:
-    #                             used_urls.add(disable_url)
-    #                             break
-    #     return used_urls
-
     def used_signin_realms(self, enabled_url: dict, disabled_url: dict) -> set:
         """Used SignIn URLs
         Returns the signin URL which has idle user realm thats not mapped any other active signin URL
         """
-        enabled_set = set().union(*enabled_url.values()) # Optimized version of user_signin_url method.
+        enabled_set = set().union(*enabled_url.values())
+        # Optimized version of user_signin_url method.
         used_urls = set()
         for disable_url,disable_realm in disabled_url.items():
             disable_realm: set
