@@ -106,6 +106,14 @@ def console_output():
     pprint(config.idle_user_realms)
     print()
 
+    logger.info("Idle Admin sign-in urls - %d\n", len(config.idle_admin_urls))
+    pprint(config.idle_admin_urls)
+    print()
+
+    logger.info("Idle User sign-in urls - %d\n", len(config.idle_user_urls))
+    pprint(config.idle_user_urls)
+    print()
+
     logger.info("Idle Authentication servers - %d\n",
             len(config.idle_auth_servers))
     pprint(config.idle_auth_servers)
@@ -122,14 +130,17 @@ def console_output():
 def csv_report():
     """Enables CSV report"""
     max_len = max(
-        len(config.idle_auth_servers), len(
-            config.idle_user_realms), len(config.idle_user_roles),
-        len(config.idle_admin_realms), len(config.idle_admin_roles)
+        len(config.idle_auth_servers),
+        len(config.idle_user_realms),
+        len(config.idle_user_roles),
+        len(config.idle_admin_realms),
+        len(config.idle_admin_roles),
+        len(config.idle_user_urls),
+        len(config.idle_admin_urls)
     )
 
-
     def fill_entries(data_list: list):
-        """Fill entries of the list with NULL"""
+        """Fill entries of the list with NULL as padding"""
         if len(data_list) < max_len:
             diff = max_len - len(data_list)
             length = len(data_list)
@@ -142,6 +153,8 @@ def csv_report():
     iauth_servers = fill_entries(list(config.idle_auth_servers))
     iuser_realms = fill_entries(list(config.idle_user_realms))
     iuser_roles = fill_entries(list(config.idle_user_roles))
+    iuser_urls = fill_entries(list(config.idle_user_urls))
+    iadmin_urls = fill_entries(list(config.idle_admin_urls))
     iadmin_realms = fill_entries(list(config.idle_admin_realms))
     iadmin_roles = fill_entries(list(config.idle_admin_roles))
 
@@ -154,7 +167,8 @@ def csv_report():
         f"results\\idle_config_report[{timestr}].csv", mode='w', encoding='utf-8', newline=''
     ) as file_handle:
         headers = ["IDLE_AUTH_SERVERS", "IDLE_USER_REALMS",
-                "IDLE_USER_ROLES", "IDLE_ADMIN_REALMS", "IDLE_ADMIN_ROLES"]
+                "IDLE_USER_ROLES", "IDLE_ADMIN_REALMS", "IDLE_ADMIN_ROLES",
+                "IDLE_USER_URLS", "IDLE_ADMIN_URLS"]
         write_output = DictWriter(file_handle, dialect='excel', fieldnames=headers)
         write_output.writeheader()
 
@@ -166,7 +180,9 @@ def csv_report():
                     headers[1]: iuser_realms[item],
                     headers[2]: iuser_roles[item],
                     headers[3]: iadmin_realms[item],
-                    headers[4]: iadmin_roles[item]
+                    headers[4]: iadmin_roles[item],
+                    headers[5]: f"{iuser_urls[item]} - {config.user_signin_disabled.get(iuser_urls[item], ' ')}",
+                    headers[6]: f"{iadmin_urls[item]} - {config.admin_signin_disabled.get(iadmin_urls[item], ' ')}",
                 }
             )
 

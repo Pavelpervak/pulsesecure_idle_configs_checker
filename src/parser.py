@@ -3,11 +3,13 @@ ICS XML Parser Class
 """
 from typing import Optional, Generator, Union
 from re import match
-from xml.etree.ElementTree import ParseError
+from xml.etree.ElementTree import ParseError, Element
 import xml.etree.ElementTree as ET
 
 class ICSXMLParser:
     """Class for creating ICS XML Parser Instances"""
+
+    default_invalid_values = ['None', '-', 'Outlook Anywhere User Role']
 
     def __init__(self, xml_file) -> None:
 
@@ -47,7 +49,9 @@ class ICSXMLParser:
 
     def _get_namespace(self) -> Optional[str]:
         """Gets the namespace using QNAME class from lxml.etree module"""
-        self.namespace = match(r'{(.*)}', self.root.tag).group(1)
+        self.namespace = match(r'{(.*)}', self.root.tag).group(1) # extracts the NS URI without {}
+        setattr(self, "fnamespace", match(r'{(.*)}', self.root.tag).group(0))
+        # creates NS with {} for iter root ops.
         try:
             assert 'xml.pulsesecure.net' in self.namespace
             # Deny if the XML file is not from ICS/PCS.
@@ -70,9 +74,22 @@ class ICSXMLParser:
         for elem in self.root.findall(path=path, namespaces=self.nsmap):
             yield elem
 
+    def _find_root_override(self, root: Element, path: str) -> Generator:
+        """XML Find wrapper"""
+        return root.find(path=path, namespaces=self.nsmap)
+
+    def find_element(self, path: str) -> Element:
+        """XML Find wrapper that uses the default root"""
+        return self.root.find(path=path, namespaces=self.nsmap)
+
     def iterfind(self, path: str) -> Generator:
-        """XML Iter wrapper - passes namespace automatically for tags"""
+        """XML IterFind wrapper - passes namespace automatically for tags"""
         for elem in self.root.iterfind(path=path, namespaces=self.nsmap):
+            yield elem
+
+    def iter(self, path: str) -> Generator:
+        """XML Iter wrapper - passes namespace automatically for tags"""
+        for elem in self.root.iter(tag=path):
             yield elem
 
     def parse_element(
@@ -83,8 +100,7 @@ class ICSXMLParser:
 
         """Returns the TEXT of the element"""
 
-        default_invalid_values = ['None', '-', 'Outlook Anywhere User Role']
-        invalid_values = default_invalid_values if invalid_values is None else default_invalid_values + invalid_values
+        invalid_values = ICSXMLParser.default_invalid_values if invalid_values is None else ICSXMLParser.default_invalid_values + invalid_values
         if allow_dups: # List will be created to allow duplicates.
             return [elem.text for elem in self.root.findall(path=path, namespaces=self.nsmap)
                     if elem.text not in invalid_values]
@@ -98,3 +114,15 @@ class ICSXMLParser:
         if isinstance(check, ET.Element): # Returns ET.Element (True) if present.
             return True
         return False
+
+    def parse_element_dict(
+        self,
+        root_element: str,
+        child_element: str) -> dict:
+
+        """Parsing elements into dict"""
+        results_dict = {}
+        for element in self.findall(path=root_element):
+            element: Element
+            results_dict[child_element] = [child.text for child in element.find(path=child_element)]
+        return results_dict

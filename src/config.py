@@ -1,7 +1,7 @@
 """ ICS Idle Config Parser """
 
 import logging
-from .parser import ICSXMLParser
+from .parser import ICSXMLParser, Element
 from .xpath import AUTH_SERVERS_ROOT, AUTH_SERVERS
 from .xpath import SIGNIN_ROOT, SIGNIN_ADMIN_REALMS, SIGNIN_USER_REALMS
 from .xpath import USER_REALMS_ROOT, USER_REALMS, USER_REALMS_AUTHSERVER, USER_REALMS_SECAUTHSERVER, USER_REALMS_DIRSERVER, USER_REALMS_ACCSERVER, USER_REALMS_RMAP
@@ -30,27 +30,30 @@ class ICSIdleConfig(ICSXMLParser):
         self.admin_realms()
         self.user_realms()
         self.signin_urls()
+        self.signin_status()
         self.user_roles()
         self.admin_roles()
         self.misc_aoa_roles()
         self.misc_ikev2_realms()
 
-    def get_value(self, root_element: str, element_path: str) -> None:
+    def get_value(self, root_element: str, element_path: str, allow_dups: bool = False) -> None:
         """Gets the element value"""
         if self.check_tree(root_element):
             logger.info(LOGGER[self.log_object]['success'])
-            self.results[element_path] = self.parse_element(element_path)
+            self.results[element_path] = self.parse_element(
+                element_path, allow_dups=allow_dups)
         else:
             self.results[element_path] = set()
             logger.warning(LOGGER[self.log_object]['fail'])
 
-    def get_values(self, root_element: str, element_path: list) -> None:
+    def get_values(self, root_element: str, element_path: list, allow_dups: bool = False) -> None:
         """Get element values from multiple paths"""
         if isinstance(element_path, list):
             if self.check_tree(root_element):
                 logger.info(LOGGER[self.log_object]['success'])
                 for elem in element_path:
-                    self.results[elem] = self.parse_element(elem)
+                    self.results[elem] = self.parse_element(
+                        elem, allow_dups=allow_dups)
             else:
                 for elem in element_path:
                     self.results[elem] = set()
@@ -77,6 +80,84 @@ class ICSIdleConfig(ICSXMLParser):
             root_element=SIGNIN_ROOT,
             element_path=elements
         )
+        self.signin_status()
+
+    def signin_status(self):
+        """Getting the Sign-in URLs mapping"""
+        user_signin_disabled_dict = {}
+        user_signin_enabled_dict = {}
+        admin_signin_disabled_dict = {}
+        admin_signin_enabled_dict = {}
+
+        for element in self.findall(path='.//access-urls/access-url'):
+            element: Element
+            self.root = element # Making the iterator as root.
+            url_pattern = self.find_element(path='url-pattern').text
+
+            if self.find_element('user'): 
+                if self.find_element(path='enabled').text == 'false':
+                    user_signin_disabled_dict[url_pattern] = self.parse_element(path="user/realms")
+                if self.find_element(path='enabled').text == 'true':
+                    user_signin_enabled_dict[url_pattern] = self.parse_element(path="user/realms")
+
+            if self.find_element('admin'):
+                if self.find_element(path='enabled').text == 'false':
+                    admin_signin_disabled_dict[url_pattern] = self.parse_element(path="admin/realms")
+                if self.find_element(path='enabled').text == 'true':
+                    admin_signin_enabled_dict[url_pattern] = self.parse_element(path="admin/realms")
+
+        self._set_root() # Reverting the root.
+        setattr(self,"user_signin_disabled",user_signin_disabled_dict)
+        setattr(self,"admin_signin_disabled",admin_signin_disabled_dict)
+
+        setattr(self,"user_signin_enabled",user_signin_enabled_dict)
+        setattr(self,"admin_signin_enabled",admin_signin_enabled_dict)
+
+        used_user_urls = self.used_signin_url(
+            enabled_url=user_signin_enabled_dict,
+            disabled_url=user_signin_disabled_dict
+        )
+        setattr(self, "used_urls_user", used_user_urls)
+
+        used_admin_urls = self.used_signin_url(
+            enabled_url=admin_signin_enabled_dict,
+            disabled_url=admin_signin_disabled_dict
+        )
+        setattr(self, "used_urls_admin", used_admin_urls)
+
+    def used_signin_url(self, enabled_url: dict, disabled_url: dict) -> set:
+        """Used SignIn URLs"""
+        used_urls = set()
+        for disable_url,disable_realm in disabled_url.items():
+            disable_realm: set
+            for enable_url,enable_realm in enabled_url.items():
+                enable_realm: set
+                if ((len(disable_realm) == len(enable_realm)) or (len(disable_realm) == 1)):
+                    if disable_realm.issubset(enable_realm):
+                        used_urls.add(disable_url)
+                        break
+                elif len(disable_realm) > len(enable_realm):
+                    for _set in disable_realm:
+                        if _set in enable_realm:
+                            used_urls.add(disable_url)
+                            break
+                elif len(disable_realm) < len(enable_realm):
+                    if len(disable_realm) > 1:
+                        for _set in disable_realm:
+                            if _set in enable_realm:
+                                used_urls.add(disable_url)
+                                break
+        return used_urls
+
+    @property
+    def idle_user_urls(self) -> set:
+        """Unused disabled signin URL - User"""
+        return set(list(self.user_signin_disabled)).difference(self.used_urls_user)
+
+    @property
+    def idle_admin_urls(self) -> set:
+        """Unused disabled signin URL - Admin"""
+        return set(list(self.admin_signin_disabled)).difference(self.used_urls_admin)
 
     def user_realms(self) -> None:
         """Parse elements present under user realms section"""

@@ -12,11 +12,7 @@ AUTH_SERVERS_ROOT = './/auth-servers'
 AUTH_SERVERS = './/auth-server/name'
 
 SIGNIN_ROOT = './/access-urls'
-# SIGNIN_USER_URLS = './/user/../url-pattern'
-# SIGNIN_USER_STATUS = './/user/../enabled'
 SIGNIN_USER_REALMS = './/access-url/user/realms'
-# SIGNIN_ADMIN_URLS = './/admin/../url-pattern'
-# SIGNIN_ADMIN_STATUS = './/admin/../enabled'
 SIGNIN_ADMIN_REALMS = './/access-url/admin/realms'
 
 USER_REALMS_ROOT = './/user-realms'
