@@ -1,7 +1,7 @@
 """ ICS Idle Config Parser """
 
 import logging
-from .parser import ICSXMLParser, Element
+from .parser import ICSXMLParser, Element, Optional
 from .xpath import AUTH_SERVERS_ROOT, AUTH_SERVERS
 from .xpath import SIGNIN_ROOT, SIGNIN_ADMIN_REALMS, SIGNIN_USER_REALMS
 from .xpath import USER_REALMS_ROOT, USER_REALMS, USER_REALMS_AUTHSERVER, USER_REALMS_SECAUTHSERVER, USER_REALMS_DIRSERVER, USER_REALMS_ACCSERVER, USER_REALMS_RMAP
@@ -35,24 +35,40 @@ class ICSIdleConfig(ICSXMLParser):
         self.misc_aoa_roles()
         self.misc_ikev2_realms()
 
-    def get_value(self, root_element: str, element_path: str, allow_dups: bool = False) -> None:
+    def get_value(
+        self,
+        root_element: str,
+        element_path: str,
+        allow_dups: bool = False,
+        invalid_values: Optional[list] = None) -> None:
         """Gets the element value"""
+
         if self.check_tree(root_element):
             logger.info(LOGGER[self.log_object]['success'])
             self.results[element_path] = self.parse_element(
-                element_path, allow_dups=allow_dups)
+                element_path,
+                allow_dups=allow_dups,
+                invalid_values=invalid_values)
         else:
             self.results[element_path] = set()
             logger.warning(LOGGER[self.log_object]['fail'])
 
-    def get_values(self, root_element: str, element_path: list, allow_dups: bool = False) -> None:
+    def get_values(
+        self,
+        root_element: str,
+        element_path: list,
+        allow_dups: bool = False,
+        invalid_values: Optional[list] = None) -> None:
         """Get element values from multiple paths"""
+
         if isinstance(element_path, list):
             if self.check_tree(root_element):
                 logger.info(LOGGER[self.log_object]['success'])
                 for elem in element_path:
                     self.results[elem] = self.parse_element(
-                        elem, allow_dups=allow_dups)
+                        elem,
+                        allow_dups=allow_dups,
+                        invalid_values=invalid_values)
             else:
                 for elem in element_path:
                     self.results[elem] = set()
@@ -60,6 +76,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def auth_servers(self) -> None:
         """Parse Total Auth Servers"""
+
         self.log_object = self.auth_servers.__name__
         self.get_value(
             root_element=AUTH_SERVERS_ROOT,
@@ -73,6 +90,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def signin_urls(self) -> None:
         """Parse user & admin realms from signin_policies"""
+
         self.log_object = self.signin_urls.__name__
         elements = [SIGNIN_USER_REALMS, SIGNIN_ADMIN_REALMS]
         self.get_values(
@@ -83,6 +101,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def signin_status(self):
         """Getting the Sign-in URLs mapping"""
+
         user_signin_disabled_dict = {}
         user_signin_enabled_dict = {}
         admin_signin_disabled_dict = {}
@@ -128,6 +147,7 @@ class ICSIdleConfig(ICSXMLParser):
         """Used SignIn URLs
         Returns the signin URL which has idle user realm thats not mapped any other active signin URL
         """
+
         enabled_set = set().union(*enabled_url.values())
         # Optimized version of user_signin_url method.
         used_urls = set()
@@ -170,6 +190,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def user_realms(self) -> None:
         """Parse elements present under user realms section"""
+
         self.log_object = self.user_realms.__name__
         elements = [
             USER_REALMS,
@@ -191,6 +212,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def admin_realms(self) -> None:
         """Parse elements present under Admin realms section"""
+
         self.log_object = self.admin_realms.__name__
         elements = [
             ADMIN_REALMS,
@@ -212,11 +234,13 @@ class ICSIdleConfig(ICSXMLParser):
 
     def user_roles(self) -> None:
         """Parse total user roles from roles data"""
+
         self.log_object = self.user_roles.__name__
 
         self.get_value(
             root_element=USER_ROLES_ROOT,
-            element_path=USER_ROLES
+            element_path=USER_ROLES,
+            invalid_values=['Outlook Anywhere User Role',]
         )
 
     @property
@@ -226,11 +250,13 @@ class ICSIdleConfig(ICSXMLParser):
 
     def admin_roles(self) -> None:
         """Parse total admin roles from roles data"""
+
         self.log_object = self.admin_roles.__name__
 
         self.get_value(
             root_element=ADMIN_ROLES_ROOT,
-            element_path=ADMIN_ROLES
+            element_path=ADMIN_ROLES,
+            invalid_values=['.Read-Only Administrators',]
         )
 
     @property
@@ -240,6 +266,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def misc_aoa_roles(self) -> None:
         """MISC: AOA Roles"""
+
         if self.check_tree(MISC_AOA_ROOT):
             logger.info("SUCCESS: (misc)Authorization-Only policy data found.")
 
@@ -264,6 +291,7 @@ class ICSIdleConfig(ICSXMLParser):
 
     def misc_ikev2_realms(self) -> None:
         """MISC: IKEv2 realms"""
+
         if self.check_tree(MISC_IKEV2_ROOT):
             logger.info("SUCCESS: (misc)IKEv2 config data found.")
 
