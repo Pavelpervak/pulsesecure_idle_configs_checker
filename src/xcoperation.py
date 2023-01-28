@@ -4,7 +4,7 @@ Module for XC operations
 from .parser import ET, Element, ICSXMLParser
 from. parser import Union
 
-class XCOperation:
+class ICSXCOperation:
     """XC operation for XML config creation"""
 
     def __init__(self, xpath: str) -> None:
@@ -70,11 +70,30 @@ class XCOperation:
             for val in value:
                 self._delete(xc_element="access-url",child="url-pattern",value=val)
 
-    def user_realms_delete(self, value: Union[str,set]) -> None:
-        """User realms delete XML generation"""
+    def realms_delete(self, value: Union[str,set]) -> None:
+        """Realms delete XML generation"""
 
         if isinstance(value, str):
             self._delete(xc_element="realm",child="name",value=value)
         else:
             for val in value:
                 self._delete(xc_element="realm",child="name",value=val)
+
+    def auth_servers_delete(self, value: Union[str,set]) -> None:
+        """Auth Servers delete XML generation"""
+
+        if isinstance(value, str):
+            self._delete(xc_element="auth-server",child="name",value=value)
+        else:
+            for val in value:
+                self._delete(xc_element="auth-server",child="name",value=val)
+
+    def admin_role_delete(self, value: Union[str,set]) -> None:
+        """Auth Servers delete XML generation"""
+
+        if isinstance(value, str):
+            self._delete(xc_element="admin-role",child="name",value=value)
+        else:
+            for val in value:
+                self._delete(xc_element="admin-role",child="name",value=val)
+                
