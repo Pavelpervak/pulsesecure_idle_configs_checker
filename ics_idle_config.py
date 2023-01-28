@@ -16,8 +16,9 @@ logger.setLevel(logging.INFO)
 
 consoleHandler = logging.StreamHandler(sys.stdout)
 console_formatter = logging.Formatter(
-    "%(asctime)s - CONSOLE -%(levelname)s -  %(name)s - (%(filename)s):(%(lineno)d) - %(message)s"
+    "%(asctime)s - CONSOLE - %(levelname)s - %(message)s"
 )
+# Removed log params %(name)s - (%(filename)s):(%(lineno)d) for better readability.
 consoleHandler.setFormatter(console_formatter)
 logger.addHandler(consoleHandler)
 
@@ -200,7 +201,7 @@ def csv_report():
                 }
             )
 
-    logger.info("Idle Config Report Saved under 'results' folder (created under current working directory).\n")
+    logger.info("CSV Report Saved under 'results' folder (created under current working directory).\n")
 
 
 # Output control flow.
