@@ -6,10 +6,12 @@ from re import match
 from xml.etree.ElementTree import ParseError, Element
 import xml.etree.ElementTree as ET
 
+
 class ICSXMLParser:
     """Class for creating ICS XML Parser Instances"""
 
     default_invalid_values = ['None', '-', 'Outlook Anywhere User Role']
+    root_attrib = {}
 
     def __init__(self, xml_file) -> None:
 
@@ -35,7 +37,7 @@ class ICSXMLParser:
             Exception type - {ferror.__class__.__name__}
             """) from None
 
-        except Exception as exc: # Catching other generic Exceptions.
+        except Exception as exc:  # Catching other generic Exceptions.
             raise SystemExit(f"{exc.__class__.__name__}: {exc}") from None
 
         # Pipelines the required methods = for autopopulating ns data.
@@ -49,9 +51,12 @@ class ICSXMLParser:
 
     def _get_namespace(self) -> Optional[str]:
         """Gets the namespace using QNAME class from lxml.etree module"""
-        self.namespace = match(r'{(.*)}', self.root.tag).group(1) # extracts the NS URI without {}
+        self.namespace = match(
+            r'{(.*)}', self.root.tag).group(1)  # extracts the NS URI without {}
         setattr(self, "fnamespace", match(r'{(.*)}', self.root.tag).group(0))
         # creates NS with {} for iter root ops.
+        # Gets the root attrib for XML creation.
+        setattr(self, "attrib", self.root.attrib)
         try:
             assert 'xml.pulsesecure.net' in self.namespace
             # Deny if the XML file is not from ICS/PCS.
@@ -61,13 +66,14 @@ class ICSXMLParser:
     Please check the XML export file and try again.
     Exception type - {aerror.__class__.__name__}
             """) from None
-        #Parse the NS value between the braces.
+        # Parse the NS value between the braces.
         else:
             return self.namespace
 
     def _set_namespace(self) -> None:
         """Sets the XML NS value to the NS dict"""
         self.nsmap = {'': self.namespace}
+        ICSXMLParser.root_attrib = {"xmlns": self.namespace} | {"xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"} | self.root.attrib
 
     def findall(self, path: str) -> Generator:
         """XML Findall wrapper"""
@@ -93,15 +99,14 @@ class ICSXMLParser:
             yield elem
 
     def parse_element(
-        self,
-        path: str,
-        allow_dups: bool=False,
-        invalid_values: Optional[list]=None) -> Union[list, set]:
-
+            self,
+            path: str,
+            allow_dups: bool = False,
+            invalid_values: Optional[list] = None) -> Union[list, set]:
         """Returns the TEXT of the element"""
 
         invalid_values = ICSXMLParser.default_invalid_values if invalid_values is None else ICSXMLParser.default_invalid_values + invalid_values
-        if allow_dups: # List will be created to allow duplicates.
+        if allow_dups:  # List will be created to allow duplicates.
             return [elem.text for elem in self.root.findall(path=path, namespaces=self.nsmap)
                     if elem.text not in invalid_values]
         # Else SET will be created to disallow duplicates.
@@ -111,18 +116,19 @@ class ICSXMLParser:
     def check_tree(self, tag: str) -> bool:
         """Checks the tag presence"""
         check = self.root.find(path=tag, namespaces=self.nsmap)
-        if isinstance(check, ET.Element): # Returns ET.Element (True) if present.
+        # Returns ET.Element (True) if present.
+        if isinstance(check, ET.Element):
             return True
         return False
 
     def parse_element_dict(
-        self,
-        root_element: str,
-        child_element: str) -> dict:
-
+            self,
+            root_element: str,
+            child_element: str) -> dict:
         """Parsing elements into dict"""
         results_dict = {}
         for element in self.findall(path=root_element):
             element: Element
-            results_dict[child_element] = [child.text for child in element.find(path=child_element)]
+            results_dict[child_element] = [
+                child.text for child in element.find(path=child_element)]
         return results_dict

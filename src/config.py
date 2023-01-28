@@ -93,7 +93,7 @@ class ICSIdleConfig(ICSXMLParser):
             self.root = element # Making the iterator as root.
             url_pattern = self.find_element(path='url-pattern').text
 
-            if self.find_element('user'): 
+            if self.find_element('user'):
                 if self.find_element(path='enabled').text == 'false':
                     user_signin_disabled_dict[url_pattern] = self.parse_element(path="user/realms")
                 if self.find_element(path='enabled').text == 'true':
