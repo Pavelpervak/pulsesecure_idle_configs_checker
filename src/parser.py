@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 class ICSXMLParser:
     """Class for creating ICS XML Parser Instances"""
 
-    default_invalid_values = ['None', '-', 'Outlook Anywhere User Role']
+    default_invalid_values = ['None', '-']
     root_attrib = {}
 
     def __init__(self, xml_file) -> None:
