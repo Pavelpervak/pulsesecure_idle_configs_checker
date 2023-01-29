@@ -174,26 +174,26 @@ class ICSIdleConfig(ICSXMLParser):
     @property
     def idle_user_urls(self) -> set:
         """Unused disabled signin URL - User"""
-        return set(list(self.results["user_signin_disabled"])).difference(self.results["used_urls_user"])
+        return sorted(set(list(self.results["user_signin_disabled"])).difference(self.results["used_urls_user"]))
 
     @property
     def idle_admin_urls(self) -> set:
         """Unused disabled signin URL - Admin"""
-        return set(list(self.results["admin_signin_disabled"])).difference(self.results["used_urls_admin"])
+        return sorted(set(list(self.results["admin_signin_disabled"])).difference(self.results["used_urls_admin"]))
 
     @property
     def idle_signin_user_realm(self) -> set:
         """Ununsed user realm mapped to disabled signin URL"""
-        return set().union(*self.results["user_signin_disabled"].values()).difference(
+        return sorted(set().union(*self.results["user_signin_disabled"].values()).difference(
             set().union(*self.results["user_signin_enabled"].values())
-        )
+        ))
 
     @property
     def idle_signin_admin_realm(self) -> set:
         """Ununsed admin realm mapped to disabled signin URL"""
-        return set().union(*self.results["admin_signin_disabled"].values()).difference(
+        return sorted(set().union(*self.results["admin_signin_disabled"].values()).difference(
             set().union(*self.results["admin_signin_enabled"].values())
-        )
+        ))
 
 
     def user_realms(self) -> None:
@@ -341,22 +341,22 @@ class ICSIdleConfig(ICSXMLParser):
     @property
     def idle_user_realms(self) -> set:
         """Idle User realms"""
-        return self.total_user_realms.difference(
+        return sorted(self.total_user_realms.difference(
             self.results[SIGNIN_USER_REALMS],
             self.results[MISC_IKEV2_REALMS]
-        )
+        ))
 
     @property
     def idle_admin_realms(self) -> set:
         """Idle Admin realms"""
-        return self.total_admin_realms.difference(
+        return sorted(self.total_admin_realms.difference(
             self.results[SIGNIN_ADMIN_REALMS]
-        )
+        ))
 
     @property
     def idle_auth_servers(self) -> set:
         """Idle Auth Servers"""
-        return self.total_auth_servers.difference(
+        return sorted(self.total_auth_servers.difference(
             self.results[USER_REALMS_AUTHSERVER],
             self.results[USER_REALMS_SECAUTHSERVER],
             self.results[USER_REALMS_DIRSERVER],
@@ -365,19 +365,19 @@ class ICSIdleConfig(ICSXMLParser):
             self.results[ADMIN_REALMS_SECAUTHSERVER],
             self.results[ADMIN_REALMS_DIRSERVER],
             self.results[ADMIN_REALMS_ACCSERVER]
-        )
+        ))
 
     @property
     def idle_user_roles(self) -> set:
         """Idle User roles"""
-        return self.total_user_roles.difference(
+        return sorted(self.total_user_roles.difference(
             self.results[USER_REALMS_RMAP],
             self.results[MISC_AOA_ROLES]
-        )
+        ))
 
     @property
     def idle_admin_roles(self) -> set:
         """Idle Admin roles"""
-        return self.total_admin_roles.difference(
+        return sorted(self.total_admin_roles.difference(
             self.results[ADMIN_REALMS_RMAP]
-        )
+        ))

@@ -106,11 +106,13 @@ class ICSXMLParser:
 
     def _handle_find(self, path: str) -> Element:
         """XML Find wrapper (XML handle)"""
+
         return self._xml_handle.find(path=path, namespaces=self.nsmap)
 
 
     def _handle_iterfind(self, path: str) -> Generator:
         """XML IterFind wrapper (XML Handle)"""
+
         for elem in self._xml_handle.iterfind(path=path, namespaces=self.nsmap):
             yield elem
 
@@ -121,11 +123,21 @@ class ICSXMLParser:
         for elem in element.findall(path=path, namespaces=self.nsmap):
             yield elem
 
+    def _element_findall_values(self, element: Element, path: str) -> set:
+        """XML Findall wrapper (Custom Element)"""
+
+        return {elem.text for elem in element.findall(path=path, namespaces=self.nsmap)}
+
 
     def _element_find(self, element: Element, path: str) -> Element:
         """XML Find wrapper (Custom handle)"""
 
         return element.find(path=path, namespaces=self.nsmap)
+
+    def _element_find_value(self, element: Element, path: str) -> Element:
+        """XML Find wrapper to return TEXT value (Custom handle)"""
+
+        return element.find(path=path, namespaces=self.nsmap).text
 
 
     def parse_element(
