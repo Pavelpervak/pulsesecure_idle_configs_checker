@@ -35,8 +35,7 @@ class RayParser(argparse.ArgumentParser):
 argparser = RayParser(
     prog="ics_idle_config.py",
     description="Script to check ICS Idle configurations.",
-    epilog="(C) Author -> Ray A."
-    )
+    epilog="(C) Author -> Ray A.")
 
 optargs = argparser.add_mutually_exclusive_group(required=False)
 optargs.add_argument(
@@ -51,15 +50,13 @@ optargs.add_argument(
     action="store_true",
     help="Disables CSV report generation",
     default=False,
-    dest="csv_report"
-)
+    dest="csv_report")
 
 argparser.add_argument(
     'file',
     metavar="XML_EXPORT_FILE",
     action="store",
-    help="Path to XML export file",
-)
+    help="Path to XML export file")
 
 args = argparser.parse_args() # Init the argsparser.
 
@@ -194,8 +191,8 @@ def csv_report():
                     headers[2]: iuser_roles[item],
                     headers[3]: iadmin_realms[item],
                     headers[4]: iadmin_roles[item],
-                    headers[5]: f"{iuser_urls[item]} - {config.user_signin_disabled.get(iuser_urls[item], ' ')}",
-                    headers[6]: f"{iadmin_urls[item]} - {config.admin_signin_disabled.get(iadmin_urls[item], ' ')}",
+                    headers[5]: f"{iuser_urls[item]} - {config.results['user_signin_disabled'].get(iuser_urls[item], ' ')}",
+                    headers[6]: f"{iadmin_urls[item]} - {config.results['admin_signin_disabled'].get(iadmin_urls[item], ' ')}",
                     headers[7]: iuser_signin[item],
                     headers[8]: iadmin_signin[item]
                 }
