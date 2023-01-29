@@ -72,63 +72,125 @@ class ICSXMLParser:
 
     def _set_namespace(self) -> None:
         """Sets the XML NS value to the NS dict"""
+
         self.nsmap = {'': self.namespace}
         ICSXMLParser.root_attrib = {"xmlns": self.namespace} | {"xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"} | self.root.attrib
 
-    def findall(self, path: str) -> Generator:
+
+    def _findall(self, path: str) -> Generator:
         """XML Findall wrapper"""
+
         for elem in self.root.findall(path=path, namespaces=self.nsmap):
             yield elem
 
-    def _find_root_override(self, root: Element, path: str) -> Generator:
-        """XML Find wrapper"""
-        return root.find(path=path, namespaces=self.nsmap)
 
-    def find_element(self, path: str) -> Element:
+    def _find(self, path: str) -> Element:
         """XML Find wrapper that uses the default root"""
+
         return self.root.find(path=path, namespaces=self.nsmap)
 
-    def iterfind(self, path: str) -> Generator:
+
+    def _iterfind(self, path: str) -> Generator:
         """XML IterFind wrapper - passes namespace automatically for tags"""
+
         for elem in self.root.iterfind(path=path, namespaces=self.nsmap):
             yield elem
 
-    def iter(self, path: str) -> Generator:
-        """XML Iter wrapper - passes namespace automatically for tags"""
-        for elem in self.root.iter(tag=path):
+
+    def _handle_findall(self, path: str) -> Generator:
+        """XML Findall wrapper (XML Handle)"""
+
+        for elem in self._xml_handle.findall(path=path, namespaces=self.nsmap):
             yield elem
+
+
+    def _handle_find(self, path: str) -> Element:
+        """XML Find wrapper (XML handle)"""
+        return self._xml_handle.find(path=path, namespaces=self.nsmap)
+
+
+    def _handle_iterfind(self, path: str) -> Generator:
+        """XML IterFind wrapper (XML Handle)"""
+        for elem in self._xml_handle.iterfind(path=path, namespaces=self.nsmap):
+            yield elem
+
+
+    def _element_findall(self, element: Element, path: str) -> Generator:
+        """XML Findall wrapper (Custom Element)"""
+
+        for elem in element.findall(path=path, namespaces=self.nsmap):
+            yield elem
+
+
+    def _element_find(self, element: Element, path: str) -> Element:
+        """XML Find wrapper (Custom handle)"""
+
+        return element.find(path=path, namespaces=self.nsmap)
+
 
     def parse_element(
             self,
             path: str,
             allow_dups: bool = False,
             invalid_values: Optional[list] = None) -> Union[list, set]:
-        """Returns the TEXT of the element"""
+        """Returns the TEXT of the element (Uses the root findall method)"""
 
         invalid_values = ICSXMLParser.default_invalid_values if invalid_values is None else ICSXMLParser.default_invalid_values + invalid_values
         if allow_dups:  # List will be created to allow duplicates.
-            return [elem.text for elem in self.root.findall(path=path, namespaces=self.nsmap)
+            return [elem.text for elem in self._findall(path=path)
                     if elem.text not in invalid_values]
         # Else SET will be created to disallow duplicates.
-        return {elem.text for elem in self.root.findall(path=path, namespaces=self.nsmap)
+        return {elem.text for elem in self._findall(path=path)
                 if elem.text not in invalid_values}
+
 
     def check_tree(self, tag: str) -> bool:
         """Checks the tag presence"""
-        check = self.root.find(path=tag, namespaces=self.nsmap)
+        check = self._find(path=tag)
         # Returns ET.Element (True) if present.
         if isinstance(check, ET.Element):
             return True
         return False
 
+
+    def _element_check_tree(self, element: Element, tag: str) -> bool:
+        """Checks the tag presence"""
+        check = self._element_find(element,path=tag)
+        # Returns ET.Element (True) if present.
+        if isinstance(check, ET.Element):
+            return True
+        return False
+
+
     def parse_element_dict(
             self,
             root_element: str,
-            child_element: str) -> dict:
+            key: str,
+            value: str,
+            check_tree: Optional[str] = None,
+            check_key: Optional[str] = None,
+            check_value: Optional[str] = None) -> dict:
         """Parsing elements into dict"""
-        results_dict = {}
-        for element in self.findall(path=root_element):
-            element: Element
-            results_dict[child_element] = [
-                child.text for child in element.find(path=child_element)]
-        return results_dict
+
+        if (check_tree and check_key and check_value):
+            return {self._element_find(element, key).text:
+            {elem.text for elem in self._element_findall(element, value)}
+            for element in self._handle_iterfind(root_element)
+            if self._element_check_tree(element, check_tree)
+            if self._element_find(element, path=check_key).text == check_value}
+
+        if (check_key and check_value):
+            return {self._element_find(element, key).text:
+            {elem.text for elem in self._element_findall(element, value)}
+            for element in self._handle_iterfind(root_element)
+            if self._element_find(element, path=check_key).text == check_value}
+
+        if check_tree:
+            return {self._element_find(element, key).text:
+            {elem.text for elem in self._element_findall(element, value)}
+            for element in self._handle_iterfind(root_element)
+            if self._element_check_tree(element, check_tree)}
+
+        return {self._element_find(element, key).text:
+        {elem.text for elem in self._element_findall(element, value)}
+        for element in self._handle_iterfind(root_element)}
