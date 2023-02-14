@@ -1,28 +1,8 @@
 """ ICS Idle Config Parser """
 
-import logging
 from .parser import ICSXMLParser, Optional
-from .xpath import AUTH_SERVERS_ROOT, AUTH_SERVERS
-
-from .xpath import SIGNIN_ROOT, SIGNIN_ADMIN_REALMS, SIGNIN_USER_REALMS
-
-from .xpath import USER_REALMS_ROOT, USER_REALMS, USER_REALMS_AUTHSERVER,USER_REALMS_SECAUTHSERVER,\
-                   USER_REALMS_DIRSERVER, USER_REALMS_ACCSERVER, USER_REALMS_RMAP
-
-from .xpath import ADMIN_REALMS_ROOT, ADMIN_REALMS, ADMIN_REALMS_AUTHSERVER, ADMIN_REALMS_SECAUTHSERVER,\
-                   ADMIN_REALMS_DIRSERVER, ADMIN_REALMS_ACCSERVER, ADMIN_REALMS_RMAP
-
-from .xpath import USER_ROLES_ROOT, USER_ROLES, ADMIN_ROLES_ROOT, ADMIN_ROLES
-
-from .xpath import MISC_AOA_ROOT, MISC_IKEV2_ROOT, MISC_AOA_ROLES, MISC_IKEV2_REALMS,\
-                   MISC_IKEV2_PORTREALM, MISC_IKEV2_PROTOREALM
-
-from .logger import LOGGER
-
-# Console Logging handler.
-logging.getLogger(__name__).addHandler(logging.StreamHandler())
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from .xpath_ic import *
+from .logger import LOGGER, logger
 
 
 class ICSIdleConfig(ICSXMLParser):
@@ -117,27 +97,47 @@ class ICSIdleConfig(ICSXMLParser):
     def signin_status(self):
         """Getting the Sign-in URLs mapping - enabled and disabled status"""
 
-        user_signin_disabled_dict = self.parse_element_dict('.//access-urls/access-url','url-pattern','user/realms',
-            check_tree='user',check_key='enabled',check_value='false')
-        
+        user_signin_disabled_dict = self.parse_element_dict(
+            './/access-urls/access-url',
+            'url-pattern',
+            'user/realms',
+            check_tree='user',
+            check_key='enabled',
+            check_value='false')
+
         self.results["user_signin_disabled"] = user_signin_disabled_dict
 
-        user_signin_enabled_dict = self.parse_element_dict('.//access-urls/access-url','url-pattern','user/realms',
-            check_tree='user',check_key='enabled',check_value='true')
-        
+        user_signin_enabled_dict = self.parse_element_dict(
+            './/access-urls/access-url',
+            'url-pattern',
+            'user/realms',
+            check_tree='user',
+            check_key='enabled',
+            check_value='true')
+
         self.results["user_signin_enabled"] = user_signin_enabled_dict
 
-        admin_signin_disabled_dict = self.parse_element_dict('.//access-urls/access-url','url-pattern','admin/realms',
-            check_tree='admin',check_key='enabled',check_value='false')
-        
+        admin_signin_disabled_dict = self.parse_element_dict(
+            './/access-urls/access-url',
+            'url-pattern',
+            'admin/realms',
+            check_tree='admin',
+            check_key='enabled',
+            check_value='false')
+
         self.results["admin_signin_disabled"] = admin_signin_disabled_dict
 
-        admin_signin_enabled_dict = self.parse_element_dict('.//access-urls/access-url','url-pattern','admin/realms',
-            check_tree='admin',check_key='enabled',check_value='true')
-        
+        admin_signin_enabled_dict = self.parse_element_dict(
+            './/access-urls/access-url',
+            'url-pattern',
+            'admin/realms',
+            check_tree='admin',
+            check_key='enabled',
+            check_value='true')
+
         self.results["admin_signin_enabled"] = admin_signin_enabled_dict
 
-    # Calling the used_signin_realms...
+    # Finding the idle-signing URLs
 
         self.results["used_urls_user"] = self.used_signin_realms(
             enabled_url=user_signin_enabled_dict,
