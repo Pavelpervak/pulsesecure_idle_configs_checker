@@ -134,9 +134,8 @@ class ICSXMLParser:
 
         return element.find(path=path, namespaces=self.nsmap)
 
-    def _element_find_value(self, element: Element, path: str) -> Element:
+    def _element_find_value(self, element: Element, path: str) -> str:
         """XML Find wrapper to return TEXT value (Custom handle)"""
-
         return element.find(path=path, namespaces=self.nsmap).text
 
 
