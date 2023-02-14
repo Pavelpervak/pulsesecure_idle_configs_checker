@@ -7,6 +7,7 @@ import argparse
 from time import strftime
 from csv import DictWriter
 from src.config import ICSIdleConfig
+from src.rspolicy import ICSRSPolicy
 
 
 # Console Logging handler.
@@ -70,8 +71,14 @@ config = ICSIdleConfig(args.file)
 # Calling the pipeline method.
 
 print()
-config.idle_configs()  # Executes all Idle config methods.
+config.idle_configs() # Executes all Idle config methods & resource policy parser.
 print()
+
+if 'results' not in os.listdir():
+    os.mkdir('results')
+
+timestr = strftime("%d-%m-%Y-%H%M%S")
+os.mkdir(fr"results\{timestr}")
 
 def console_output():
     """Enables the Console output"""
@@ -167,13 +174,8 @@ def csv_report():
     iuser_signin = fill_entries(list(config.idle_signin_user_realm))
     iadmin_signin = fill_entries(list(config.idle_signin_admin_realm))
 
-    if 'results' not in os.listdir():
-        os.mkdir('results')
-
-    timestr = strftime("%d-%m-%Y-%H%M%S")
-
     with open(
-        f"results\\idle_config_report[{timestr}].csv", mode='w', encoding='utf-8', newline=''
+        fr"results\{timestr}\idle_config_report.csv", mode='w', encoding='utf-8', newline=''
     ) as file_handle:
         headers = ["IDLE_AUTH_SERVERS", "IDLE_USER_REALMS",
                 "IDLE_USER_ROLES", "IDLE_ADMIN_REALMS", "IDLE_ADMIN_ROLES",
@@ -198,8 +200,27 @@ def csv_report():
                 }
             )
 
-    logger.info("CSV Report Saved under 'results' folder (created under current working directory).\n")
+    logger.info("Idle Config Report Saved under 'results' folder (created under current working directory).\n")
 
+def rs_policy_parser():
+    """Pipeline for all CSV write operations"""
+
+    rs_policy = ICSRSPolicy(args.file, config.idle_user_roles)
+    rs_policy.rs_policies()
+
+    # timestr = strftime("%d-%m-%Y-%H%M%S")
+    # os.mkdir(f'results\\{timestr}')
+    # timestr = strftime("%d-%m-%Y-%H%M%S")
+
+    rs_policy.write_web_policies(fr"results\{timestr}\web_policy.csv")
+    rs_policy.write_file_policies(fr"results\{timestr}\file_policy.csv")
+    rs_policy.write_sam_policies(fr"results\{timestr}\sam_policy.csv")
+    rs_policy.write_termsrv_policies(fr"results\{timestr}\termsrv_policy.csv")
+    rs_policy.write_html5_policies(fr"results\{timestr}\html5_policy.csv")
+    rs_policy.write_vpntunnel_policies(fr"results\{timestr}\vpn_policy.csv")
+
+    print()
+    logger.info("Resource Policy Report Saved under 'results' folder (created under current working directory).\n")
 
 # Output control flow.
 
@@ -207,6 +228,8 @@ if args.csv_report:
     console_output() # User opted to disable csv_report
 elif args.console_output:
     csv_report() # User opted to disable console output.
-else: # Default will execute both.
+    rs_policy_parser()
+else: # Default will execute all methods.
     console_output()
     csv_report()
+    rs_policy_parser()
