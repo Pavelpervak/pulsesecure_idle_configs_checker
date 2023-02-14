@@ -6,6 +6,12 @@ Logger messages
 Misc log events were recorded as part of the methods itself.
 
 """
+import logging
+
+# Console Logging handler.
+logging.getLogger(__name__).addHandler(logging.StreamHandler())
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 LOGGER = {
 
@@ -39,4 +45,33 @@ LOGGER = {
         'fail': "ERROR: Admin roles data not found. Results would be inaccurate!"
     },
 
+    'web_policies': {
+        'success': "SUCCESS: Web policies data found.",
+        'fail': "ERROR: Web policies data not found."
+    },
+
+    'file_policies': {
+        'success': "SUCCESS: File policies data found.",
+        'fail': "ERROR: File policies data not found."
+    },
+
+    'sam_policies': {
+        'success': "SUCCESS: SAM policies data found.",
+        'fail': "ERROR: SAM policies data not found."
+    },
+
+    'termserv_policies': {
+        'success': "SUCCESS: TermServ policies data found.",
+        'fail': "ERROR: TermServ policies data not found."
+    },
+
+    'html5_policies': {
+        'success': "SUCCESS: HTML5 policies data found.",
+        'fail': "ERROR: HTML5 policies data not found."
+    },
+
+    'vpntunnel_policies': {
+        'success': "SUCCESS: VPN Tunnel policies data found.",
+        'fail': "ERROR: VPN Tunnel policies data not found."
+    }
 }
