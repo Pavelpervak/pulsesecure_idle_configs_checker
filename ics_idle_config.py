@@ -8,6 +8,7 @@ from time import strftime
 from csv import DictWriter
 from src.config import ICSIdleConfig
 from src.rspolicy import ICSRSPolicy
+from src.rsprofile import ICSRSProfile
 
 
 # Console Logging handler.
@@ -79,7 +80,7 @@ if 'results' not in os.listdir():
 
 timestr = strftime("%d-%m-%Y-%H%M%S")
 os.mkdir(fr"results\{timestr}")
-
+os.mkdir(fr"results\{timestr}\resource_policies")
 def console_output():
     """Enables the Console output"""
     print("****** TOTAL CONFIGS ******")
@@ -199,28 +200,83 @@ def csv_report():
                     headers[8]: iadmin_signin[item]
                 }
             )
-
-    logger.info("Idle Config Report Saved under 'results' folder (created under current working directory).\n")
+    print()
 
 def rs_policy_parser():
     """Pipeline for all CSV write operations"""
 
+    logger.info("Parsing Resource policy dependencies.")
+
     rs_policy = ICSRSPolicy(args.file, config.idle_user_roles)
     rs_policy.rs_policies()
 
-    # timestr = strftime("%d-%m-%Y-%H%M%S")
-    # os.mkdir(f'results\\{timestr}')
-    # timestr = strftime("%d-%m-%Y-%H%M%S")
-
-    rs_policy.write_web_policies(fr"results\{timestr}\web_policy.csv")
-    rs_policy.write_file_policies(fr"results\{timestr}\file_policy.csv")
-    rs_policy.write_sam_policies(fr"results\{timestr}\sam_policy.csv")
-    rs_policy.write_termsrv_policies(fr"results\{timestr}\termsrv_policy.csv")
-    rs_policy.write_html5_policies(fr"results\{timestr}\html5_policy.csv")
-    rs_policy.write_vpntunnel_policies(fr"results\{timestr}\vpn_policy.csv")
+    rs_policy.write_web_policies(fr"results\{timestr}\resource_policies\web_policy.csv")
+    rs_policy.write_file_policies(fr"results\{timestr}\resource_policies\file_policy.csv")
+    rs_policy.write_sam_policies(fr"results\{timestr}\resource_policies\sam_policy.csv")
+    rs_policy.write_termsrv_policies(fr"results\{timestr}\resource_policies\termsrv_policy.csv")
+    rs_policy.write_html5_policies(fr"results\{timestr}\resource_policies\html5_policy.csv")
+    rs_policy.write_vpntunnel_policies(fr"results\{timestr}\resource_policies\vpn_policy.csv")
 
     print()
-    logger.info("Resource Policy Report Saved under 'results' folder (created under current working directory).\n")
+
+def rs_profile_parser():
+    """Pipeline for RS profiles"""
+
+    logger.info("Parsing Idle Resource Profiles.")
+
+    rs_profile = ICSRSProfile(args.file)
+    rs_profile.rs_profiles()
+
+    max_len = max(
+        len(rs_profile.web_profiles_),
+        len(rs_profile.file_profiles_),
+        len(rs_profile.sam_profiles_capp_),
+        len(rs_profile.sam_profiles_dest_),
+        len(rs_profile.termsrv_profiles_),
+        len(rs_profile.html5_profiles_),
+        len(rs_profile.vdi_profiles_)
+    )
+
+    def fill_entries(data_list: list):
+        """Fill entries of the list with NULL as padding"""
+        if len(data_list) < max_len:
+            diff = max_len - len(data_list)
+            length = len(data_list)
+            for item_ in range(diff):
+                data_list.insert((length+item_), " ")
+            return data_list
+        return data_list
+
+    eweb_profiles = fill_entries(rs_profile.web_profiles_)
+    efile_profiles = fill_entries(rs_profile.file_profiles_)
+    esam_profiles_capp = fill_entries(rs_profile.sam_profiles_capp_)
+    esam_profiles_dest = fill_entries(rs_profile.sam_profiles_dest_)
+    eterm_profiles = fill_entries(rs_profile.termsrv_profiles_)
+    evdi_profiles = fill_entries(rs_profile.vdi_profiles_)
+    ehtml5_profiles = fill_entries(rs_profile.html5_profiles_)
+
+    with open(
+            fr"results\{timestr}\idle_resource_profiles.csv", mode='w', encoding='utf-8', newline=''
+        ) as file_handle:
+        headers = ["WEB_PROFILES", "FILE_PROFILES", "SAM_CLIENT_APPS", "SAM_DESTS",
+        "TERMSERV_PROFILES", "VDI_PROFILES", "HTML5_PROFILES"]
+        write_output = DictWriter(file_handle, dialect='excel', fieldnames=headers)
+        write_output.writeheader()
+
+        for item in range(max_len):
+
+            write_output.writerow(
+                {
+                    headers[0]: eweb_profiles[item],
+                    headers[1]: efile_profiles[item],
+                    headers[2]: esam_profiles_capp[item],
+                    headers[3]: esam_profiles_dest[item],
+                    headers[4]: eterm_profiles[item],
+                    headers[5]: evdi_profiles[item],
+                    headers[6]: ehtml5_profiles[item]
+                })
+    print()
+
 
 # Output control flow.
 
@@ -229,7 +285,11 @@ if args.csv_report:
 elif args.console_output:
     csv_report() # User opted to disable console output.
     rs_policy_parser()
+    rs_profile_parser()
+    logger.info("Reports saved under 'results' folder (created under current working directory).\n")
 else: # Default will execute all methods.
     console_output()
     csv_report()
     rs_policy_parser()
+    rs_profile_parser()
+    logger.info("Reports saved under 'results' folder (created under current working directory).\n")
