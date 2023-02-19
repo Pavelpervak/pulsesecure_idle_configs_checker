@@ -73,5 +73,35 @@ LOGGER = {
     'vpntunnel_policies': {
         'success': "SUCCESS: VPN Tunnel policies data found.",
         'fail': "ERROR: VPN Tunnel policies data not found."
+    },
+
+    'web_profiles': {
+        'success': "SUCCESS: Web profiles data found.",
+        'fail': "ERROR: Web profiles data not found."
+    },
+
+    'file_profiles': {
+        'success': "SUCCESS: File profiles data found.",
+        'fail': "ERROR: File profiles data not found."
+    },
+
+    'sam_profiles': {
+        'success': "SUCCESS: SAM profiles data found.",
+        'fail': "ERROR: SAM profiles data not found."
+    },
+
+    'termserv_profiles': {
+        'success': "SUCCESS: TermServ profiles data found.",
+        'fail': "ERROR: TermServ profiles data not found."
+    },
+	
+    'vdi_profiles': {
+        'success': "SUCCESS: VDI profiles data found.",
+        'fail': "ERROR: VDI profiles data not found."
+    },
+
+    'html5_profiles': {
+        'success': "SUCCESS: HTML5 profiles data found.",
+        'fail': "ERROR: HTML5 profiles data not found."
     }
 }
