@@ -30,7 +30,7 @@ class ICSRSPolicy(ICSXMLParser):
         self.sam_policies()
         self.termserv_policies()
         self.html5_policies()
-        self.vpntunnel_policies()
+        self.vpntunnel_policies()   
 
     def resource_policy_w_parent(
             self,
@@ -170,7 +170,8 @@ class ICSRSPolicy(ICSXMLParser):
                 # If the policy data is empty.
                 if len(resource_policy[top]) == 0:
                     # Creating empty dict to maintain CSV header integrity.
-                    _ = result_[top]
+                    _ = result_[top] # this is needed as the CSV headers are static.
+                    # default dict will just fill the empty one with empty LIST.
                 for policy in resource_policy[top]:
                     if {role, }.issubset(resource_policy[top][policy]):
                         result_[top].append(policy)
@@ -178,8 +179,9 @@ class ICSRSPolicy(ICSXMLParser):
                         # To create TOP keys with empty LIST (useful for CSV)
                         if result_[top]:
                             pass
-            self._policy_padding(result_)
+            self._policy_padding(result_) # filling values for CSV write operation.
             result_roles.update({role: result_})
+            # Result dict will have mapping for idle role and its data.
         return result_roles
 
     def _policy_padding(self, rs_policy_filtered: defaultdict):
@@ -187,23 +189,30 @@ class ICSRSPolicy(ICSXMLParser):
 
         for policy in rs_policy_filtered:
             self.policy_length.append(len(rs_policy_filtered[policy]))
-            if max(self.policy_length):
+            if max(self.policy_length): # policy length is the no. of rs policies found.
                 if len(rs_policy_filtered[policy]) != max(self.policy_length):
+                    # catching policies that are less than the max. bucket and fill it with null.
                     diff_len = max(self.policy_length) - \
                         len(rs_policy_filtered[policy])
                     rs_policy_filtered[policy] = rs_policy_filtered[policy] + \
-                        ["" for i in range(diff_len)]
+                        ["" for i in range(diff_len)] # empty "" added.
 
     def _first_key(self, rs_policy: dict):
         """First key from level 1"""
-        return list(rs_policy)[0]
+        return list(rs_policy)[0] # for getting the first idle role.
 
     def _second_key(self, rs_policy: dict):
         """First key from level 2"""
+        # for getting the first resource policy type mapped to first idle role.
+        # types - ACL, SSO-POST, etc.
         return list(rs_policy[self._first_key(rs_policy)])[0]
 
     def _first_policy_length(self, rs_policy: dict):
         """Getting the length of first policy - after padding"""
+        # for getting the first policy type data.
+        # i.e., how many web ACL policies were found.
+        # Since we have added NULL values to match the max policy size
+        # All policy will give the same length :)
         return len(rs_policy[self._first_key(rs_policy)][self._second_key(rs_policy)])
 
     def write_web_policies(
