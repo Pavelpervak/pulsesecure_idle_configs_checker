@@ -97,7 +97,7 @@ class ICSIdleConfig(ICSXMLParser):
     def signin_status(self):
         """Getting the Sign-in URLs mapping - enabled and disabled status"""
 
-        user_signin_disabled_dict = self.parse_element_dict(
+        user_signin_disabled_dict = self._parse_element_dict(
             './/access-urls/access-url',
             'url-pattern',
             'user/realms',
@@ -107,7 +107,7 @@ class ICSIdleConfig(ICSXMLParser):
 
         self.results["user_signin_disabled"] = user_signin_disabled_dict
 
-        user_signin_enabled_dict = self.parse_element_dict(
+        user_signin_enabled_dict = self._parse_element_dict(
             './/access-urls/access-url',
             'url-pattern',
             'user/realms',
@@ -117,7 +117,7 @@ class ICSIdleConfig(ICSXMLParser):
 
         self.results["user_signin_enabled"] = user_signin_enabled_dict
 
-        admin_signin_disabled_dict = self.parse_element_dict(
+        admin_signin_disabled_dict = self._parse_element_dict(
             './/access-urls/access-url',
             'url-pattern',
             'admin/realms',
@@ -127,7 +127,7 @@ class ICSIdleConfig(ICSXMLParser):
 
         self.results["admin_signin_disabled"] = admin_signin_disabled_dict
 
-        admin_signin_enabled_dict = self.parse_element_dict(
+        admin_signin_enabled_dict = self._parse_element_dict(
             './/access-urls/access-url',
             'url-pattern',
             'admin/realms',
@@ -139,20 +139,22 @@ class ICSIdleConfig(ICSXMLParser):
 
     # Finding the idle-signing URLs
 
-        self.results["used_urls_user"] = self.used_signin_realms(
+        self.results["used_urls_user"] = self.used_signin_urls(
             enabled_url=user_signin_enabled_dict,
             disabled_url=user_signin_disabled_dict
         )
 
-        self.results["used_urls_admin"] = self.used_signin_realms(
+        self.results["used_urls_admin"] = self.used_signin_urls(
             enabled_url=admin_signin_enabled_dict,
             disabled_url=admin_signin_disabled_dict
         )
 
 
-    def used_signin_realms(self, enabled_url: dict, disabled_url: dict) -> set:
-        """Used SignIn URLs
-        Returns the signin URL which has idle user realm thats not mapped any other active signin URL
+    def used_signin_urls(self, enabled_url: dict, disabled_url: dict) -> set:
+        """
+        :Used SignIn URLs:
+        Returns the signin URL which has idle user realm
+        thats not mapped any other active signin URL
         """
 
         enabled_set = set().union(*enabled_url.values())
@@ -174,27 +176,28 @@ class ICSIdleConfig(ICSXMLParser):
     @property
     def idle_user_urls(self) -> set:
         """Unused disabled signin URL - User"""
-        return sorted(set(list(self.results["user_signin_disabled"])).difference(self.results["used_urls_user"]))
+        return sorted(set(list(self.results["user_signin_disabled"])).difference(
+            self.results["used_urls_user"]))
 
     @property
     def idle_admin_urls(self) -> set:
         """Unused disabled signin URL - Admin"""
-        return sorted(set(list(self.results["admin_signin_disabled"])).difference(self.results["used_urls_admin"]))
+        return sorted(set(list(self.results["admin_signin_disabled"])).difference(
+            self.results["used_urls_admin"]))
 
     @property
     def idle_signin_user_realm(self) -> set:
-        """Ununsed user realm mapped to disabled signin URL"""
-        return sorted(set().union(*self.results["user_signin_disabled"].values()).difference(
-            set().union(*self.results["user_signin_enabled"].values())
-        ))
+        """Unused user realm mapped to disabled signin URL"""
+        user_realm_signin_disabled = set().union(*self.results["user_signin_disabled"].values())
+        user_realm_signin_enabled = set().union(*self.results["user_signin_enabled"].values())
+        return sorted(user_realm_signin_disabled.difference(user_realm_signin_enabled))
 
     @property
     def idle_signin_admin_realm(self) -> set:
-        """Ununsed admin realm mapped to disabled signin URL"""
-        return sorted(set().union(*self.results["admin_signin_disabled"].values()).difference(
-            set().union(*self.results["admin_signin_enabled"].values())
-        ))
-
+        """Unused admin realm mapped to disabled signin URL"""
+        admin_realm_signin_disabled = set().union(*self.results["admin_signin_disabled"].values())
+        admin_realm_signin_enabled = set().union(*self.results["admin_signin_enabled"].values())
+        return sorted(admin_realm_signin_disabled.difference(admin_realm_signin_enabled))
 
     def user_realms(self) -> None:
         """Parse elements present under user realms section"""
