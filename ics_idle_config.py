@@ -81,6 +81,8 @@ if 'results' not in os.listdir():
 timestr = strftime("%d-%m-%Y-%H%M%S")
 os.mkdir(fr"results\{timestr}")
 os.mkdir(fr"results\{timestr}\resource_policies")
+
+
 def console_output():
     """Enables the Console output"""
     print("****** TOTAL CONFIGS ******")
