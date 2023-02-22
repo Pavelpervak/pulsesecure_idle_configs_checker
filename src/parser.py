@@ -173,7 +173,7 @@ class ICSXMLParser:
         return False
 
 
-    def parse_element_dict(
+    def _parse_element_dict(
             self,
             root_element: str,
             key: str,
@@ -183,25 +183,8 @@ class ICSXMLParser:
             check_value: Optional[str] = None) -> dict:
         """Parsing elements into dict"""
 
-        if (check_tree and check_key and check_value):
-            return {self._element_find(element, key).text:
-            {elem.text for elem in self._element_findall(element, value)}
-            for element in self._handle_iterfind(root_element)
-            if self._element_check_tree(element, check_tree)
-            if self._element_find(element, path=check_key).text == check_value}
-
-        if (check_key and check_value):
-            return {self._element_find(element, key).text:
-            {elem.text for elem in self._element_findall(element, value)}
-            for element in self._handle_iterfind(root_element)
-            if self._element_find(element, path=check_key).text == check_value}
-
-        if check_tree:
-            return {self._element_find(element, key).text:
-            {elem.text for elem in self._element_findall(element, value)}
-            for element in self._handle_iterfind(root_element)
-            if self._element_check_tree(element, check_tree)}
-
         return {self._element_find(element, key).text:
-        {elem.text for elem in self._element_findall(element, value)}
-        for element in self._handle_iterfind(root_element)}
+        {elem.text for elem in self._element_findall(element, value) if elem.text is not None}
+        for element in self._handle_iterfind(root_element)
+        if self._element_check_tree(element, check_tree)
+        if self._element_find(element, path=check_key).text == check_value}
