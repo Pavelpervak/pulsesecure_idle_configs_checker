@@ -196,8 +196,8 @@ def csv_report():
                     headers[2]: iuser_roles[item],
                     headers[3]: iadmin_realms[item],
                     headers[4]: iadmin_roles[item],
-                    headers[5]: f"{iuser_urls[item]} - {config.results['user_signin_disabled'].get(iuser_urls[item], ' ')}",
-                    headers[6]: f"{iadmin_urls[item]} - {config.results['admin_signin_disabled'].get(iadmin_urls[item], ' ')}",
+                    headers[5]: iuser_urls[item],
+                    headers[6]: iadmin_urls[item],
                     headers[7]: iuser_signin[item],
                     headers[8]: iadmin_signin[item]
                 }
