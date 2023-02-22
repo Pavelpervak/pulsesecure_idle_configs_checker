@@ -155,47 +155,61 @@ class ICSRSPolicy(ICSXMLParser):
             self.vpntunnel_policies_ = set()
             logger.warning(LOGGER[self.log_object]['fail'])
 
-    @property
-    def resource_policies(self):
-        """Consolidated RS policies output"""
-        return self.web_policies_ | self.file_policies_ | self.sam_policies_ | self.termserv_policies_ | self.html5_policies_ | self.vpntunnel_policies_
-
-    def policy_parser(self, resource_policy: dict):
-        """RS policy dependency finder"""
+    def _policy_parser(self, resource_policy: dict):
+        """
+        RS policy dependency finder.
+        This will check if the idle roles are part of any RS policy dependency.
+        After filtering, data will be sent to policy padding method for filling with null values.
+        """
 
         result_roles = {}
         for role in self.idle_user_roles:
             result_ = defaultdict(list)
-            for top in resource_policy:
+            for policy_type in resource_policy:
                 # If the policy data is empty.
-                if len(resource_policy[top]) == 0:
+                if len(resource_policy[policy_type]) == 0:
                     # Creating empty dict to maintain CSV header integrity.
-                    _ = result_[top] # this is needed as the CSV headers are static.
+                    _ = result_[policy_type]
+                    # This is needed as the CSV headers are static.
                     # default dict will just fill the empty one with empty LIST.
-                for policy in resource_policy[top]:
-                    if {role, }.issubset(resource_policy[top][policy]):
-                        result_[top].append(policy)
+                policy_count = 0
+                for policy in resource_policy[policy_type]:
+                    # if type has atleast one policy configured.
+                    if {role, }.issubset(resource_policy[policy_type][policy]):
+                        result_[policy_type].append(policy)
+                        policy_count += 1
+                        # creating a new ddict with the same type name and policy name as value.
                     else:
+                        # check if there are policy added to the dd already.
                         # To create TOP keys with empty LIST (useful for CSV)
-                        if result_[top]:
-                            pass
-            self._policy_padding(result_) # filling values for CSV write operation.
+                        if result_[policy_type]:
+                            pass # ignore if another policy from same type added already. :)
+                self.policy_length.append(len(result_[policy_type]))
+
             result_roles.update({role: result_})
             # Result dict will have mapping for idle role and its data.
-        return result_roles
+        return self._policy_padding(result_roles)
+        # padding ops for the result roles.
 
-    def _policy_padding(self, rs_policy_filtered: defaultdict):
-        """Getting the length of filtered RS policy and filling with NULL - Padding"""
+    def _policy_padding(self, roles_rspolicies: dict):
+        """
+        Getting the length of filtered RS policy and filling with NULL - Padding.
+        Sorting the filtered RS policy.
+        """
 
-        for policy in rs_policy_filtered:
-            self.policy_length.append(len(rs_policy_filtered[policy]))
-            if max(self.policy_length): # policy length is the no. of rs policies found.
-                if len(rs_policy_filtered[policy]) != max(self.policy_length):
+        if max(self.policy_length): # policy length is the no. of rs policies found.
+            for role in roles_rspolicies:
+                for policy in roles_rspolicies[role]:
+                    if len(roles_rspolicies[role][policy]) != max(self.policy_length):
                     # catching policies that are less than the max. bucket and fill it with null.
-                    diff_len = max(self.policy_length) - \
-                        len(rs_policy_filtered[policy])
-                    rs_policy_filtered[policy] = rs_policy_filtered[policy] + \
-                        ["" for i in range(diff_len)] # empty "" added.
+                        diff_len = max(self.policy_length) - \
+                            len(roles_rspolicies[role][policy])
+                        roles_rspolicies[role][policy] = sorted(roles_rspolicies[role][policy]) + \
+                            ["" for i in range(diff_len)] # empty "" added.
+                    else:
+                        roles_rspolicies[role][policy] = sorted(roles_rspolicies[role][policy])
+
+        return roles_rspolicies
 
     def _first_key(self, rs_policy: dict):
         """First key from level 1"""
@@ -213,6 +227,7 @@ class ICSRSPolicy(ICSXMLParser):
         # i.e., how many web ACL policies were found.
         # Since we have added NULL values to match the max policy size
         # All policy will give the same length :)
+        # NOTE: This length will be (-1) as we have ROLE header in the CSV report.
         return len(rs_policy[self._first_key(rs_policy)][self._second_key(rs_policy)])
 
     def write_web_policies(
@@ -220,7 +235,8 @@ class ICSRSPolicy(ICSXMLParser):
             filename: str):
         """Web policies write CSV file"""
 
-        rs_policy = self.policy_parser(self.web_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.web_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=WEB_POLICIES_HEADERS)
@@ -256,7 +272,8 @@ class ICSRSPolicy(ICSXMLParser):
     def write_file_policies(self, filename: str):
         """Writing File policies to CSV"""
 
-        rs_policy = self.policy_parser(self.file_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.file_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=FILE_POLICIES_HEADERS)
@@ -276,7 +293,8 @@ class ICSRSPolicy(ICSXMLParser):
     def write_sam_policies(self, filename: str):
         """Writing SAM policies to CSV"""
 
-        rs_policy = self.policy_parser(self.sam_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.sam_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=SAM_POLICIES_HEADERS)
@@ -294,7 +312,8 @@ class ICSRSPolicy(ICSXMLParser):
     def write_termsrv_policies(self, filename: str):
         """Writing termserv policies to CSV"""
 
-        rs_policy = self.policy_parser(self.termserv_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.termserv_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=TERMSERV_POLICIES_HEADERS)
@@ -312,7 +331,8 @@ class ICSRSPolicy(ICSXMLParser):
     def write_html5_policies(self, filename: str):
         """Writing HTML5 policies to CSV"""
 
-        rs_policy = self.policy_parser(self.html5_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.html5_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=HTML5_POLICIES_HEADERS)
@@ -330,7 +350,8 @@ class ICSRSPolicy(ICSXMLParser):
     def write_vpntunnel_policies(self, filename: str):
         """Writing HTML5 policies to CSV"""
 
-        rs_policy = self.policy_parser(self.vpntunnel_policies_)
+        self.policy_length = []
+        rs_policy = self._policy_parser(self.vpntunnel_policies_)
         with open(filename, mode='w', encoding='utf-8', newline='') as file_handle:
             write_output = DictWriter(
                 file_handle, dialect='excel', fieldnames=NC_POLICIES_HEADERS)
