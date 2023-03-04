@@ -1,8 +1,7 @@
 """
 Module for XC operations
 """
-from .parser import ET, Element, ICSXMLParser
-from. parser import Union
+from ..api.parser import ET, Element, Union, ICSXMLParser
 
 class ICSXCOperation:
     """XC operation for XML config creation"""
@@ -42,7 +41,7 @@ class ICSXCOperation:
             xc_element,
             attrib={"xc:operation": "delete"})
 
-        subelem = ET.SubElement(xc_delete, child)
+        subelem = ET.SubElement(xc_delete, child) # loop config here
         subelem.text = value
 
 

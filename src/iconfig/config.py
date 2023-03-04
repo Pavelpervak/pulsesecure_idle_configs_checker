@@ -1,9 +1,7 @@
 """ ICS Idle Config Parser """
 
-from .parser import ICSXMLParser, Optional
-from .xpath_ic import *
-from .logger import LOGGER, logger
-
+from ..api import ICSXMLParser, Optional, logger, LOGGER
+from ..xpath.iconfig import *
 
 class ICSIdleConfig(ICSXMLParser):
     """ICS Idle Config Parser Class"""

@@ -6,9 +6,7 @@ import sys
 import argparse
 from time import strftime
 from csv import DictWriter
-from src.config import ICSIdleConfig
-from src.rspolicy import ICSRSPolicy
-from src.rsprofile import ICSRSProfile
+from src import ICSIdleConfig, ICSRSPolicy, ICSRSProfile
 
 
 # Console Logging handler.

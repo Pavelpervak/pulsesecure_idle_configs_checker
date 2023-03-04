@@ -14,9 +14,8 @@ CHG-02 -> Added "role_value" args for resource_policy_w_parent, resource_policy.
 """
 from collections import defaultdict
 from csv import DictWriter
-from .parser import ICSXMLParser
-from .logger import LOGGER, logger
-from .xpath_rs import *
+from ..api import ICSXMLParser, logger, LOGGER
+from ..xpath.rspolicy import *
 
 
 class ICSRSPolicy(ICSXMLParser):
