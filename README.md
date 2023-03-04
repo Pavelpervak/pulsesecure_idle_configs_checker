@@ -24,6 +24,11 @@ _Identifies the following idle configuration items and logic used to identify th
 - **User & Admin realms mapped to disabled SignIn URLs** (user/admin realms not mapped to any other active/enabled signin URLs).
 - **User Roles - Resource Policies dependency report** (CSV report that shows resource policy dependency for idle user roles).
 - **Resource Profiles** (resource profiles not mapped to any user roles).
+```diff
++ It's recommended to run the script again after clearing up all IDLE USER ROLES
++ as clearing some roles might make some resource profiles orphan.
+```
+
 
 ---
 ## Prerequisites
@@ -33,10 +38,11 @@ _Identifies the following idle configuration items and logic used to identify th
 
 _Download XML export from VPN server admin GUI by navigating to **Maintenance >> Import/Export >> Export XML >> Select All >> Export**_
 
-```
-**Excluding ESAP & Pulse Client package during XML export will reduce size of the backup file - Recommended (not mandatory)**
-ESAP - Collapse Endpoint Security tree > ESAP Version > select None.
-Client package - Collapse Pulse Secure Versions/Ivanti Secure Access Client tree > Pulse Secure Versions > None.
+```diff
+- Excluding ESAP & Pulse Client package during XML export will reduce size of the backup file.
++ Recommended for faster parsing :)
+ESAP - Under XML Import/Export > collapse Endpoint Security tree > ESAP Version > select None.
+Client package - Under XML Import/Export > collapse Pulse Secure Versions/Ivanti Secure Access Client tree > Pulse Secure Versions > None.
 ```
 ---
 
@@ -85,4 +91,4 @@ _(Use `python` if `python3` doesn't work)_
 
 ## Work-In-Progress
 
-- Option to generate XML delete config file for identified config objects.
+- Option to generate XML delete config file for identified idle config objects.
