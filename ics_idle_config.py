@@ -46,9 +46,9 @@ optargs.add_argument(
     dest="console_output")
 
 optargs.add_argument(
-    '--disable-csv_report',
+    '--disable-csv-report',
     action="store_true",
-    help="Disables CSV report generation",
+    help="Disables all CSV reports generation - Idle config, Idle resource policies & profiles.",
     default=False,
     dest="csv_report")
 
@@ -59,6 +59,8 @@ argparser.add_argument(
     help="Path to XML export file")
 
 args = argparser.parse_args() # Init the argsparser.
+
+timestr = strftime("%d-%m-%Y-%H%M%S")
 
 def pprint(data):
     """Unpacks the items and print it"""
@@ -73,15 +75,15 @@ print()
 config.idle_configs() # Executes all Idle config methods & resource policy parser.
 print()
 
-if 'results' not in os.listdir():
-    os.mkdir('results')
+def results_dir() -> None:
+    """Results directory creator"""
 
-timestr = strftime("%d-%m-%Y-%H%M%S")
-os.mkdir(fr"results\{timestr}")
-os.mkdir(fr"results\{timestr}\resource_policies")
+    if 'results' not in os.listdir():
+        os.mkdir('results')
+    os.mkdir(fr"results\{timestr}")
+    os.mkdir(fr"results\{timestr}\resource_policies")
 
-
-def console_output():
+def console_output() -> None:
     """Enables the Console output"""
     print("****** TOTAL CONFIGS ******")
     print()
@@ -141,7 +143,7 @@ def console_output():
     pprint(config.idle_user_roles)
     print()
 
-def csv_report():
+def csv_report() -> None:
     """Enables CSV report"""
     max_len = max(
         len(config.idle_auth_servers),
@@ -202,7 +204,7 @@ def csv_report():
             )
     print()
 
-def rs_policy_parser():
+def rs_policy_parser() -> None:
     """Pipeline for all CSV write operations"""
 
     logger.info("Parsing Resource policy dependencies.")
@@ -219,7 +221,7 @@ def rs_policy_parser():
 
     print()
 
-def rs_profile_parser():
+def rs_profile_parser() -> None:
     """Pipeline for RS profiles"""
 
     logger.info("Parsing Idle Resource Profiles.")
@@ -282,16 +284,17 @@ def rs_profile_parser():
 
 if args.csv_report:
     console_output() # User opted to disable csv_report
-    rs_policy_parser()
-    rs_profile_parser()
-    logger.info("Reports saved under 'results' folder (created under current working directory).\n")
+
 elif args.console_output:
+    results_dir()
     csv_report() # User opted to disable console output.
     rs_policy_parser()
     rs_profile_parser()
     logger.info("Reports saved under 'results' folder (created under current working directory).\n")
+
 else: # Default will execute all methods.
     console_output()
+    results_dir()
     csv_report()
     rs_policy_parser()
     rs_profile_parser()
