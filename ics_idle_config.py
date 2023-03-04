@@ -282,6 +282,9 @@ def rs_profile_parser():
 
 if args.csv_report:
     console_output() # User opted to disable csv_report
+    rs_policy_parser()
+    rs_profile_parser()
+    logger.info("Reports saved under 'results' folder (created under current working directory).\n")
 elif args.console_output:
     csv_report() # User opted to disable console output.
     rs_policy_parser()
