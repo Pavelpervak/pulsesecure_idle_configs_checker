@@ -23,6 +23,7 @@ _Identifies the following idle configuration items and logic used to identify th
 - **SignIn URLs** (In disabled state and not holding user/admin realm(s) that's active on any other active/enabled signin URLs).
 - **User & Admin realms mapped to disabled SignIn URLs** (user/admin realms not mapped to any other active/enabled signin URLs).
 - **User Roles - Resource Policies dependency report** (CSV report that shows resource policy dependency for idle user roles).
+- **Resource Profiles** (resource profiles not mapped to any user roles).
 
 ---
 ## Prerequisites
@@ -84,6 +85,4 @@ _(Use `python` if `python3` doesn't work)_
 
 ## Work-In-Progress
 
-- Dependency mapping between user roles and resource access policies -> DONE.
-- Identify Idle Resource profiles.
 - Option to generate XML delete config file for identified config objects.
