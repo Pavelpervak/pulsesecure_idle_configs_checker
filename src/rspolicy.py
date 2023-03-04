@@ -1,5 +1,16 @@
 """
 Resource policies parser
+
+:::Changelog:::
+(*use 'CHG-X -> Applied' while searching)
+
+[Feb 2022]
+CHG-01 -> RS policy parser logic updated, max_length optimizations made.
+
+[04/03/22 - 3:30 PM IST]
+CHG-02 -> Added "role_value" args for resource_policy_w_parent, resource_policy. file-policies &
+          network-connect-bandwidth-policy using "role" tag instead "roles".
+
 """
 from collections import defaultdict
 from csv import DictWriter
@@ -23,7 +34,7 @@ class ICSRSPolicy(ICSXMLParser):
         self.policy_length = []
         super().__init__(xml_file)
 
-    def rs_policies(self):
+    def rs_policies(self) -> None:
         """Pipeline method to execute all Resource policies"""
         self.web_policies()
         self.file_policies()
@@ -34,11 +45,13 @@ class ICSRSPolicy(ICSXMLParser):
 
     def resource_policy_w_parent(
             self,
-            rspolicy_path: str):
+            rspolicy_path: str,
+            role_value: str = "roles") -> set:
         """Parsing Resource access policy (PARENT-TYPE) - Selected & Excluded policies
         ("All Roles" will be ignored)"""
 
-        return {self._element_find_value(policy, "name"): sorted(self._element_findall_values(policy, "roles"))
+        #CHG-02 -> _element_findall_values args changed to role_value.
+        return {self._element_find_value(policy, "name"): sorted(self._element_findall_values(policy, role_value))
                 for policy in self._handle_iterfind(rspolicy_path)
                 if (self._element_find_value(policy, "parent-type") == "none" and
                 (self._element_find_value(policy, "apply") != "all"))
@@ -46,11 +59,13 @@ class ICSRSPolicy(ICSXMLParser):
 
     def resource_policy(
             self,
-            rspolicy_path: str):
+            rspolicy_path: str,
+            role_value: str = "roles") -> set:
         """Parsing Resource access policy (NON-PARENT TYPE) - Selected & Excluded policies
         ("All Roles" will be ignored)"""
 
-        return {self._element_find_value(policy, "name"): sorted(self._element_findall_values(policy, "roles"))
+        #CHG-02 -> _element_findall_values args changed to role_value.
+        return {self._element_find_value(policy, "name"): sorted(self._element_findall_values(policy, role_value))
                 for policy in self._handle_iterfind(rspolicy_path)
                 if (self._element_find_value(policy, "apply") != "all")
                 }
@@ -99,13 +114,14 @@ class ICSRSPolicy(ICSXMLParser):
                 FILE_WIN_COMPRESS_ACL,
                 FILE_WIN_SSO_ACL,
             ]:
-                self.file_policies_[elem] = self.resource_policy_w_parent(elem)
+                # CHG-02 -> Applied
+                self.file_policies_[elem] = self.resource_policy_w_parent(elem, role_value="role")
         else:
             self.file_policies_ = set()
             logger.warning(LOGGER[self.log_object]['fail'])
 
     def sam_policies(self) -> None:
-        """File Policies"""
+        """SAM Policies"""
         self.log_object = self.sam_policies.__name__
         if self.check_tree(SAM_ROOT):
             logger.info(LOGGER[self.log_object]['success'])
@@ -116,7 +132,7 @@ class ICSRSPolicy(ICSXMLParser):
             logger.warning(LOGGER[self.log_object]['fail'])
 
     def termserv_policies(self) -> None:
-        """File Policies"""
+        """Terminal Services Policies"""
         self.log_object = self.termserv_policies.__name__
         if self.check_tree(TERM_SERV_ROOT):
             logger.info(LOGGER[self.log_object]['success'])
@@ -127,7 +143,7 @@ class ICSRSPolicy(ICSXMLParser):
             logger.warning(LOGGER[self.log_object]['fail'])
 
     def html5_policies(self) -> None:
-        """File Policies"""
+        """HTML5 Policies"""
         self.log_object = self.html5_policies.__name__
         if self.check_tree(HTML5_ROOT):
             logger.info(LOGGER[self.log_object]['success'])
@@ -138,30 +154,36 @@ class ICSRSPolicy(ICSXMLParser):
             logger.warning(LOGGER[self.log_object]['fail'])
 
     def vpntunnel_policies(self) -> None:
-        """File Policies"""
+        """VPN tunnelling Policies"""
+
+        #CHG-02 -> Applied.
         self.log_object = self.vpntunnel_policies.__name__
         if self.check_tree(NC_ROOT):
             logger.info(LOGGER[self.log_object]['success'])
+
+            # NC_BWIDTH removed and added as separated as that's only policy with "role" tag.
             for elem in [
                 NC_ACL,
                 NC_CONNPROF,
                 NC_STUNNEL,
-                NC_BWIDTH,
                 NC_NODE_CONNPROF
             ]:
                 self.vpntunnel_policies_[
                     elem] = self.resource_policy(elem)
+                self.vpntunnel_policies_[
+                    NC_BWIDTH] = self.resource_policy(NC_BWIDTH, role_value="role")
         else:
             self.vpntunnel_policies_ = set()
             logger.warning(LOGGER[self.log_object]['fail'])
 
-    def _policy_parser(self, resource_policy: dict):
+    def _policy_parser(self, resource_policy: dict) -> dict:
         """
         RS policy dependency finder.
         This will check if the idle roles are part of any RS policy dependency.
         After filtering, data will be sent to policy padding method for filling with null values.
         """
 
+        #CHG-01 -> Applied.
         result_roles = {}
         for role in self.idle_user_roles:
             result_ = defaultdict(list)
@@ -191,12 +213,13 @@ class ICSRSPolicy(ICSXMLParser):
         return self._policy_padding(result_roles)
         # padding ops for the result roles.
 
-    def _policy_padding(self, roles_rspolicies: dict):
+    def _policy_padding(self, roles_rspolicies: dict) -> dict:
         """
         Getting the length of filtered RS policy and filling with NULL - Padding.
         Sorting the filtered RS policy.
         """
 
+        #CHG-01 -> Applied.
         if max(self.policy_length): # policy length is the no. of rs policies found.
             for role in roles_rspolicies:
                 for policy in roles_rspolicies[role]:
@@ -211,17 +234,17 @@ class ICSRSPolicy(ICSXMLParser):
 
         return roles_rspolicies
 
-    def _first_key(self, rs_policy: dict):
+    def _first_key(self, rs_policy: dict) -> str:
         """First key from level 1"""
         return list(rs_policy)[0] # for getting the first idle role.
 
-    def _second_key(self, rs_policy: dict):
+    def _second_key(self, rs_policy: dict) -> str:
         """First key from level 2"""
         # for getting the first resource policy type mapped to first idle role.
         # types - ACL, SSO-POST, etc.
         return list(rs_policy[self._first_key(rs_policy)])[0]
 
-    def _first_policy_length(self, rs_policy: dict):
+    def _first_policy_length(self, rs_policy: dict) -> int:
         """Getting the length of first policy - after padding"""
         # for getting the first policy type data.
         # i.e., how many web ACL policies were found.
@@ -232,7 +255,7 @@ class ICSRSPolicy(ICSXMLParser):
 
     def write_web_policies(
             self,
-            filename: str):
+            filename: str) -> None:
         """Web policies write CSV file"""
 
         self.policy_length = []
@@ -269,7 +292,7 @@ class ICSRSPolicy(ICSXMLParser):
                         WEB_POLICIES_HEADERS[19]: policy[WEB_SAML_EXTERNAL][item],
                     })
 
-    def write_file_policies(self, filename: str):
+    def write_file_policies(self, filename: str) -> None:
         """Writing File policies to CSV"""
 
         self.policy_length = []
@@ -290,7 +313,7 @@ class ICSRSPolicy(ICSXMLParser):
                         FILE_POLICIES_HEADERS[3]: policy[FILE_WIN_COMPRESS_ACL][item]
                     })
 
-    def write_sam_policies(self, filename: str):
+    def write_sam_policies(self, filename: str) -> None:
         """Writing SAM policies to CSV"""
 
         self.policy_length = []
@@ -309,7 +332,7 @@ class ICSRSPolicy(ICSXMLParser):
                         SAM_POLICIES_HEADERS[1]: policy[SAM_ACL][item]
                     })
 
-    def write_termsrv_policies(self, filename: str):
+    def write_termsrv_policies(self, filename: str) -> None:
         """Writing termserv policies to CSV"""
 
         self.policy_length = []
@@ -328,7 +351,7 @@ class ICSRSPolicy(ICSXMLParser):
                         TERMSERV_POLICIES_HEADERS[1]: policy[TERM_SERV_ACL][item]
                     })
 
-    def write_html5_policies(self, filename: str):
+    def write_html5_policies(self, filename: str) -> None:
         """Writing HTML5 policies to CSV"""
 
         self.policy_length = []
@@ -347,7 +370,7 @@ class ICSRSPolicy(ICSXMLParser):
                         HTML5_POLICIES_HEADERS[1]: policy[HTML5_ACL][item]
                     })
 
-    def write_vpntunnel_policies(self, filename: str):
+    def write_vpntunnel_policies(self, filename: str) -> None:
         """Writing HTML5 policies to CSV"""
 
         self.policy_length = []
