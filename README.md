@@ -11,7 +11,7 @@ Python Script to check Idle configurations in Pulse Secure VPN servers using the
 - Saves the result to a CSV file (timestamped csv files stored under "results" folder - created automatically under cwd) - uses the [CSV API](https://docs.python.org/3/library/csv.html) from python standard library.
 - Uses the [XML ElementTree API](https://docs.python.org/3/library/xml.etree.elementtree.html) from python standard library for parsing operations.
 - No third-party library dependencies.
-- Direct interaction with VPN server is not required as the parsing is done offline.
+- Direct/Live interaction with VPN server is not required as the parsing is done offline.
 ---
 ## Supported Operations
 
@@ -26,7 +26,7 @@ _Identifies the following idle configuration items and logic used to identify th
 - **Resource Profiles** (resource profiles not mapped to any user roles).
 ```diff
 + It's recommended to run the script again after clearing up all IDLE USER ROLES
-+ as clearing some roles might make some resource profiles orphan.
++ as clearing some roles might orphan some resource profiles.
 ```
 
 
