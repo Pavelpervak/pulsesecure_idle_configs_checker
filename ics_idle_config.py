@@ -1,4 +1,18 @@
-"""Main file for ICE Idle Config"""
+"""
+Ivanti Connect Secure (ICS) Idle Config Checker.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Script to check Idle configurations in Pulse Secure VPN servers using the XML export/backup file.
+
+Parses the XML backup file of Ivanti Connect Secure (ICS) appliances and shows the Idle config
+objects present. Support console output and CSV reports for better readability.
+
+Please refer to the README file for supported features & examples.
+
+License:
+MIT License -- Copyright (c) 2023 Ray A.
+
+"""
 
 import logging
 import os
@@ -85,6 +99,7 @@ def results_dir() -> None:
 
 def console_output() -> None:
     """Enables the Console output"""
+
     print("****** TOTAL CONFIGS ******")
     print()
 
@@ -145,6 +160,7 @@ def console_output() -> None:
 
 def csv_report() -> None:
     """Enables CSV report"""
+
     max_len = max(
         len(config.idle_auth_servers),
         len(config.idle_user_realms),

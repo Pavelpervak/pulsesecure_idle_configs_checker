@@ -1,5 +1,6 @@
 """
-ICS Idle Config - XML Parser API
+Ivanti Connect Secure (ICS) Idle Config - XML Parser API.
+
 """
 
 from .parser import ICSXMLParser, Optional

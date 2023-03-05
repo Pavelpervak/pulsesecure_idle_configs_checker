@@ -1,9 +1,15 @@
 """
-Logger messages
+src.api.logger
+~~~~~~~~~~~~~~
+Logger messages that's used by the config root checker (src.iconfig)
 
-:::NOTE:::
+Nested dictionary containing ICS root config objects for validating the presence of data.
+Root config objects include auth servers, admin, user realms & roles, resource profiles & policies.
+Misc log events were recorded as part of the methods itself - not stored here!
+(src.iconfig.config.misc_*)
 
-Misc log events were recorded as part of the methods itself.
+Streamhandler `logger` object is created when importing this module, which is used for
+displaying those log messages.
 
 """
 import logging

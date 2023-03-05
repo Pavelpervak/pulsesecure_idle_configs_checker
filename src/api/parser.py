@@ -1,6 +1,10 @@
 """
-ICS XML Parser Class
+src.api.parser
+~~~~~~~~~~~~~~
+ICS XML Config Parser - wrapper for Python Stdlib ElementTree API.
+
 """
+
 from typing import Optional, Generator, Union
 from re import match
 from xml.etree.ElementTree import ParseError, Element
@@ -8,12 +12,38 @@ import xml.etree.ElementTree as ET
 
 
 class ICSXMLParser:
-    """Class for creating ICS XML Parser Instances"""
+    """
+    ICS XML Config Parser
+
+    Wrapper class for loading and parsing the Ivanti Connect Secure (ICS) XML backup config file
+    Handles automatic XML namespace handling, root setting, tag value extraction.
+
+    Attributes:
+        default_invalid_values: Ignorable value while parsing tag's text values.
+        root_attrib: root element `configuration` attrib for generating XML delete configs (src.idelete.xcoperation)
+
+        root: root element for the XML tree.
+        namespace: XML namespace attrib used by the root element.
+        nsmap: XML namespace used by etree API find, findall methods.
+
+    """
 
     default_invalid_values = ['None', '-']
     root_attrib = {}
 
     def __init__(self, xml_file) -> None:
+        """
+        Initializes the instance with XML filepath.
+
+        Args:
+            xml_file: filepath of the XML backup file.
+        
+        Raises:
+            FileNotFoundError: XML filepath is invalid or file not found.
+            ParseError: XML structure is invalid/malformed.
+            Exception: All other exceptions.
+            
+        """
 
         self.root = {}
         self.namespace = {}
@@ -46,11 +76,18 @@ class ICSXMLParser:
         self._set_namespace()
 
     def _set_root(self) -> None:
-        """Sets the root element in XML for parsing"""
+        """Sets the root element in XML for parsing."""
         self.root = self._xml_handle.getroot()
 
     def _get_namespace(self) -> Optional[str]:
-        """Gets the namespace using QNAME class from lxml.etree module"""
+        """Returns the XMLNS attrib value from root element.
+
+        Extracts the NS URI from XMLNS root attrib field and updates the attributes.
+        These attributes are used for XML delete operations.
+        
+        Raises:
+            AssertionError: Invalid XML backup file.
+        """
         self.namespace = match(
             r'{(.*)}', self.root.tag).group(1)  # extracts the NS URI without {}
         setattr(self, "fnamespace", match(r'{(.*)}', self.root.tag).group(0))
@@ -67,84 +104,93 @@ class ICSXMLParser:
     Exception type - {aerror.__class__.__name__}
             """) from None
         # Parse the NS value between the braces.
-        else:
-            return self.namespace
+        return self.namespace
 
     def _set_namespace(self) -> None:
-        """Sets the XML NS value to the NS dict"""
+        """Sets the XML NS value to the NS dict.
+        Updates the root_attrib class instance attribute which is used by XML delete operation."""
 
         self.nsmap = {'': self.namespace}
         ICSXMLParser.root_attrib = {"xmlns": self.namespace} | {"xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"} | self.root.attrib
 
-
     def _findall(self, path: str) -> Generator:
-        """XML Findall wrapper"""
+        """XML Findall wrapper. See base method for more details."""
 
         for elem in self.root.findall(path=path, namespaces=self.nsmap):
             yield elem
 
-
     def _find(self, path: str) -> Element:
-        """XML Find wrapper that uses the default root"""
+        """XML Find wrapper that uses the default root. See base method for more details."""
 
         return self.root.find(path=path, namespaces=self.nsmap)
 
-
     def _iterfind(self, path: str) -> Generator:
-        """XML IterFind wrapper - passes namespace automatically for tags"""
+        """XML IterFind wrapper - passes namespace automatically for tags. See base method for more details."""
 
         for elem in self.root.iterfind(path=path, namespaces=self.nsmap):
             yield elem
 
-
     def _handle_findall(self, path: str) -> Generator:
-        """XML Findall wrapper (XML Handle)"""
+        """XML Findall wrapper (XML Handle).
+        Calls the method over the XML handle object instead of root"""
 
         for elem in self._xml_handle.findall(path=path, namespaces=self.nsmap):
             yield elem
 
-
     def _handle_find(self, path: str) -> Element:
-        """XML Find wrapper (XML handle)"""
+        """XML Find wrapper (XML handle).
+        Calls the method over the XML handle object instead of root"""
 
         return self._xml_handle.find(path=path, namespaces=self.nsmap)
 
-
     def _handle_iterfind(self, path: str) -> Generator:
-        """XML IterFind wrapper (XML Handle)"""
+        """XML IterFind wrapper (XML Handle).
+        Calls the method over the XML handle object instead of root"""
 
         for elem in self._xml_handle.iterfind(path=path, namespaces=self.nsmap):
             yield elem
 
-
     def _element_findall(self, element: Element, path: str) -> Generator:
-        """XML Findall wrapper (Custom Element)"""
+        """XML Findall wrapper (Custom Element).
+        Calls the method over the custom Etree element object instead of root"""
 
         for elem in element.findall(path=path, namespaces=self.nsmap):
             yield elem
 
     def _element_findall_values(self, element: Element, path: str) -> set:
-        """XML Findall wrapper (Custom Element)"""
+        """XML Findall wrapper (Custom Element).
+        Calls the method over the custom Etree element object instead of root"""
 
         return {elem.text for elem in element.findall(path=path, namespaces=self.nsmap)}
 
 
     def _element_find(self, element: Element, path: str) -> Element:
-        """XML Find wrapper (Custom handle)"""
+        """XML Find wrapper (Custom handle).
+        Calls the method over the custom Etree element object instead of root"""
 
         return element.find(path=path, namespaces=self.nsmap)
 
     def _element_find_value(self, element: Element, path: str) -> str:
-        """XML Find wrapper to return TEXT value (Custom handle)"""
-        return element.find(path=path, namespaces=self.nsmap).text
+        """XML Find wrapper to return TEXT value (Custom handle).
+        Calls the method over the custom Etree element object instead of root"""
 
+        return element.find(path=path, namespaces=self.nsmap).text
 
     def parse_element(
             self,
             path: str,
             allow_dups: bool = False,
             invalid_values: Optional[list] = None) -> Union[list, set]:
-        """Returns the TEXT of the element (Uses the root findall method)"""
+        """Returns the TEXT of the element (Uses the root findall method).
+        
+        Args:
+            path: XPATH string.
+            allow_dups: If set, duplicate text values will be allowed. Default - False.
+            invalid_values: Values compared against the received text value.
+        
+        Returns:
+            List - Contains XML tag text values if allow_dups is set to True.
+            Set - Contains XML tag text values if allow_dups is set to False (default)"""
 
         invalid_values = ICSXMLParser.default_invalid_values if invalid_values is None else ICSXMLParser.default_invalid_values + invalid_values
         if allow_dups:  # List will be created to allow duplicates.
@@ -156,7 +202,17 @@ class ICSXMLParser:
 
 
     def check_tree(self, tag: str) -> bool:
-        """Checks the tag presence"""
+        """Checks for XML object presence and returns bool value.
+        
+        Method for checking the presence of provided tag object in the XML tree.
+        This is used to do parsing operations & creating stores based on the result
+        ,i.e., if this returns in False, then an empty result bucket is created
+        *Employed by high-level API (src.iconfig.config.ICSIdleConfig)
+
+        Args:
+            tag: XPATH string.
+        """
+
         check = self._find(path=tag)
         # Returns ET.Element (True) if present.
         if isinstance(check, ET.Element):
@@ -165,7 +221,16 @@ class ICSXMLParser:
 
 
     def _element_check_tree(self, element: Element, tag: str) -> bool:
-        """Checks the tag presence"""
+        """Checks for XML object presence and returns bool value.
+
+        See check_tree method for more details.
+        This method uses the custom XML Etree element for checking.
+        
+        Args:
+            Element: Etree object.
+            tag: XPATH string.
+        """
+
         check = self._element_find(element,path=tag)
         # Returns ET.Element (True) if present.
         if isinstance(check, ET.Element):
@@ -181,7 +246,23 @@ class ICSXMLParser:
             check_tree: Optional[str] = None,
             check_key: Optional[str] = None,
             check_value: Optional[str] = None) -> dict:
-        """Parsing elements into dict"""
+        """Parsing XML elements into key/value pairs
+        
+        Useful for parsing XML tree with conditional parsing enabled by providing
+        custom root element, finding element and its value with all custom Etree
+        element based APIs.
+        
+        Dictionary will be created based on the `text` attribute of the provided
+        key and value data.
+
+        Args:
+            root_element: XML root element from where the tree is formed.
+            key, value: XPATH string - tag name.
+            check_tree, check_key, check_value: XPATH string - tag name (optional)
+
+        Returns:
+            Dictionary that contains the value of the provided key and value data.
+        """
 
         return {self._element_find(element, key).text:
         {elem.text for elem in self._element_findall(element, value) if elem.text is not None}
