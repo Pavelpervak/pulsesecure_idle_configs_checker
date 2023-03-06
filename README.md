@@ -92,3 +92,4 @@ _(Use `python` if `python3` doesn't work)_
 ## Work-In-Progress
 
 - Option to generate XML delete config file for identified idle config objects.
+- Formatting the CSV files using powershell.
