@@ -93,3 +93,7 @@ _(Use `python` if `python3` doesn't work)_
 
 - Option to generate XML delete config file for identified idle config objects.
 - Formatting the CSV files using powershell.
+
+
+#help me with AndroRAT
+I didn't know how to contact you otherwise, sorry. I would like to know how to connect to an existing session in AndroRat and thank you for such a wonderful program! (I teach lessons on my phone, good luck to you!). Please answer me by telegram @Binwar7591 or by email ernst753951@mail.ru
